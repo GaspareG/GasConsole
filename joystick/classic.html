@@ -1,0 +1,401 @@
+<html>
+    <head>
+        <title>Classic Joystick</title>
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
+        <meta name="theme-color" content="#888" />
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >
+        <style>
+	    html { overflow: hidden ;}
+            body {
+                font-family: arial;
+                overflow:hidden;
+		user-select:none;
+                background: #888 ; 
+                height: 100%; 
+                width: 100%; 
+                margin: 0px; 
+            }
+
+	    #landscape { 
+		height: 100%; 
+		width: 100%; 
+		background: #F44336;
+		z-index: 100; 
+		position: fixed; 
+		top: 0px; 
+		left: 0px;
+		line-height: 50px ;
+		vertical-align: middle ;
+		text-align: center  ;
+		font-size: 40px;
+		font-weight: bold ;		
+	    }
+
+	    #error { 
+		position: absolute ;
+		top: 40% ;
+		width: 80% ;
+		height: 50% ;
+		left: 10% ;
+		transform: translateY(-50%);
+	    }
+
+	    @-webkit-keyframes rotate {
+  		0%   { -webkit-transform: rotate(45deg); }
+            	100% { -webkit-transform: rotate(-45deg); }
+	    }
+
+	    #error img {
+		width: auto ;
+		height: auto ;
+    		-webkit-animation-name: rotate; 
+    		-webkit-animation-duration: 3s; 
+    		-webkit-animation-iteration-count: infinite;
+		-webkit-transition-timing-function: linear;
+	    }
+
+	    @media only screen and (orientation:portrait){
+   		#landscape { display: block; z-index: 100; }
+            }
+	
+	    @media only screen and (orientation:landscape){
+		#landscape { display: none ; }
+	    }
+
+            #debug {
+		position: fixed ;
+		background: black;
+		border: 5px white solid ;
+		width: 28.5% ;
+		top: 10% ;
+		left: 35% ;
+		height: 30% ;
+		line-height: 30px ;
+		vertical-align: middle ;
+		display: block ;
+		text-align: center ;
+		font-weight: bold ;
+		border-radius: 5% ;
+		color: white ;
+	     }
+
+	     .panel {
+		width: 30vw ;
+		height: 100vh ;
+		float: left ;
+		vertical-align: middle ;
+		position: relative ;
+	     }	
+
+	
+             #cross {
+		vertical-align: middle ;
+		width: 30vw;
+		position: absolute ;		
+		top: 50% ;
+		transform: translateY(-50%);
+	     }
+
+	     .row {
+		height: 10vw ;
+		width: 10vw;
+		display: table-cell ;
+		vertical-align: middle ;
+		text-align: center ;
+	     }	
+	     br { 
+		margin: 0px !important ;
+		content: "" ; 
+	     }
+
+	     .panel { padding-left: 1.5vw ; padding-right: 1.5vw ; }
+	     #middle { background: black ; z-index: 100;}
+             #top, #left, #right, #bottom { background: black ; border: 5px solid white ;}
+	     #top { border-bottom: 0px ; border-radius: 20% 20% 0% 0% ; }
+             #bottom { border-top: 0px ; border-radius: 0% 0% 20% 20% ; }
+	     #left { border-right: 0px ; border-radius: 20% 0% 0% 20% ; }
+             #right { border-left: 0px ; border-radius: 0% 20% 20% 0% ; }
+
+	     .col { 
+		float: left ;
+		width: 50%; 
+		height: 100% ; 
+		vertical-align: middle; 
+		position: relative;
+	      }
+
+	     .button {
+		display: inline-block ;
+		width: 12vw ;
+		height: 12vw ;
+		background: #ddd ;
+		border-radius: 5% ;
+                position: absolute ;
+                top: 50% ;
+		left: 1.5vw ;
+                transform: translateY(-50%);
+		background: black ;
+		border: 5px solid white ;
+             }
+
+	     .buttonc {
+ 		background: black ;
+		border-radius: 50% ;
+		width: 10vw ;
+		height: 10vw ;
+		margin-top: 1vw ;
+		vertical-align: middle ;
+		font-size: 6vw ;
+		color: white ;
+		line-height: 10vw ;
+		font-weight: bold ;
+	      }
+
+              #A.active, #B.active {
+                box-shadow: 0px 0px 7px 7px #FFF;
+              }
+		
+	      #right.active {
+			-webkit-box-shadow: inset -7px 0px 7px 3px white;
+			-moz-box-shadow:    inset -7px 0px 7px 3px white;
+			box-shadow:         inset -7px 0px 7px 3px white;
+	      }
+		
+              #left.active {
+                        -webkit-box-shadow: inset 7px 0px 7px 3px white;
+                        -moz-box-shadow:    inset 7px 0px 7px 3px white;
+                        box-shadow:         inset 7px 0px 7px 3px white;
+              }
+
+              #top.active {
+                        -webkit-box-shadow: inset 0px 7px 7px 3px white;
+                        -moz-box-shadow:    inset 0px 7px 7px 3px white;
+                        box-shadow:         inset 0px 7px 7px 3px white;
+              }
+
+              #bottom.active {
+                        -webkit-box-shadow: inset 0px -7px 7px 3px white;
+                        -moz-box-shadow:    inset 0px -7px 7px 3px white;
+                        box-shadow:         inset 0px -7px 7px 3px white;
+              }
+
+       
+	      hr { border: 2.5px solid white ; margin: 0px ;}
+	</style>
+    </head>
+
+    <body>
+	<div id="debug">
+		Game Info
+		<hr/>
+		<div id="info"></div>
+	</div>
+	<center>
+		<div id="lf"   class="panel">
+			<div id="cross">
+				<div class="row"></div>
+				<div class="row" id="top">U</div>
+				<div class="row"></div>
+				</br>
+                                <div class="row" id="left">L</div>
+                                <div class="row" id="middle"></div>
+                                <div class="row" id="right">R</div>
+                                </br>
+                                <div class="row"></div>
+                                <div class="row" id="bottom">B</div>
+                                <div class="row"></div>
+                                
+			</div>
+
+		</div>
+		<div id="center" class="panel"></div>
+		<div id="rg"  class="panel">
+
+			<div class="col"><div class="button" id="A"><div class="buttonc">A</div></div></div>
+			<div class="col"><div class="button" id="B"><div class="buttonc">B</div></div></div>
+		</div>
+	</center>
+	<div id="landscape">
+		<div id="error">
+		Please rotate your phone!<br/><br/>
+		<img src="rotate.png" />
+		</div>
+	</div>
+	<script>
+
+                document.oncontextmenu = function(event) {
+                        event.preventDefault();
+                        event.stopPropagation(); // not necessary in my case, could leave in case stopImmediateProp isn't available?
+                        event.stopImmediatePropagation();
+                        return false;
+                };
+
+		var L,R,U,D;
+		var A,B;
+		var debug ;
+
+		var cross = [false, false, false, false];
+		var button = [false, false];
+
+                function getOffset(el) {
+                        el = el.getBoundingClientRect();
+                        return {
+                                left: el.left + window.scrollX,
+                                top: el.top + window.scrollY
+                        }
+                }
+
+                function center(el)
+                {
+			var h = el.scrollHeight ;
+			var w = el.scrollWidth ;
+			return { left: getOffset(el).left+h/2,
+				  top: getOffset(el).top +w/2,
+				  r: Math.sqrt(h*h/4+w*w/4)  };
+                }
+
+
+                // TODO CREAZIONE CONNESSIONE WEBSOCKET
+                var wsServer = new WebSocket("ws://88.198.124.71:6060");
+                var wsReady = false ;
+
+                wsServer.onopen = function(){
+                        wsServer.send("CLIENT");
+                        wsReady = true ;
+                };
+
+                wsServer.onmessage = function(event){
+                        debug.innerHTML = event.data ;
+                };
+
+
+		var oldCross = [false,false,false,false] ;
+		var oldButton = [false,false] ;
+		var interval ;
+	
+		document.addEventListener("DOMContentLoaded",function(){
+
+			interval = setInterval(function(){
+/*				if(!oldButton[0]&&button[0])
+					console.log("A[keydown]");
+				else if(oldButton[0]&&button[0])
+					console.log("A[keypress]");
+				else if(oldButton[0]&&!button[0])
+					console.log("A[keyup]"); 				
+
+                                if(!oldButton[1]&&button[1])
+                                        console.log("B[keydown]");
+                                else if(oldButton[1]&&button[1])
+                                        console.log("B[keypress]");
+                                else if(oldButton[1]&&!button[1])
+                                        console.log("B[keyup]");
+
+				if(cross[0])
+					console.log("LEFT[press]");
+                                if(cross[1])
+                                        console.log("RIGHT[press]");
+                                if(cross[2])
+                                        console.log("UP[press]");
+                                if(cross[3])
+                                        console.log("DOWN[press]");
+*/
+	                        // TODO INVIO EVENTI WEB SOCKET
+        	                var toSend = {
+               	                	controller: "classic",
+                               		classic: {
+						button: { "A": button[0], "B": button[1] },
+						direction: {
+							left:  cross[0],
+							right: cross[1],
+							top:   cross[2],
+							down:  cross[3]
+						}
+                                	}
+                        	};
+				//console.log(JSON.stringify(toSend));
+                        	if( wsReady )
+                                	wsServer.send(JSON.stringify(toSend));
+
+				oldCross = cross ;
+				oldButton = button;
+			},35);		
+					
+			L = document.getElementById("left");
+                        R = document.getElementById("right");
+                        U = document.getElementById("top");
+                        D = document.getElementById("bottom");
+
+                        A = document.getElementById("A");
+                        B = document.getElementById("B");
+
+                        debug = document.getElementById("info");
+
+			function test(touch, cx)
+			{
+				var distX = cx.left-touch.pageX ;
+				var distY = cx. top-touch.pageY ;
+				return Math.sqrt(distX*distX+distY*distY) < cx.r ;
+			}
+			function handler(event){
+				event.preventDefault();
+				var cL = center(L);
+                                var cR = center(R);
+                                var cU = center(U);
+                                var cD = center(D);
+                                var cA = center(A);
+                                var cB = center(B);
+
+				var cross2  = [false,false,false,false] ;
+				var button2 = [false,false] ;
+				for(var i = 0 ; i < event.touches.length ; i++)
+				{
+					cross2[0] = cross2[0] || test(event.touches[i],cL);
+                                        cross2[1] = cross2[1] || test(event.touches[i],cR);
+                                        cross2[2] = cross2[2] || test(event.touches[i],cU);
+                                        cross2[3] = cross2[3] || test(event.touches[i],cD);
+					button2[0] = button2[0] || test(event.touches[i],cA);
+					button2[1] = button2[1] || test(event.touches[i],cB);
+				}
+
+				// TODO INVIO EVENTI AL SOCKET
+/*				if(!button2[0] && button[0])
+					console.log("A[click]");
+				if(!button2[1] && button[1])
+					console.log("B[click]");
+				if(!cross2[0] && cross[0])
+					console.log("LEFT[click]");
+                                if(!cross2[1] && cross[1])
+                                        console.log("RIGHT[click]");
+                                if(!cross2[2] && cross[2])
+                                        console.log("UP[click]");
+                                if(!cross2[3] && cross[3])
+                                        console.log("DOWN[click]");
+*/
+				cross = cross2 ;
+				button = button2 ;
+			
+				A.className = "button" + (button[0]?" active":"");
+                                B.className = "button" + (button[1]?" active":"");
+
+                                L.className = "row" + (cross[0]?" active":"");
+                                R.className = "row" + (cross[1]?" active":"");
+                                U.className = "row" + (cross[2]?" active":"");
+                                D.className = "row" + (cross[3]?" active":"");
+	
+				//debug.innerHTML = cross[0] + " " + cross[1] + " " + cross[2] + " " + cross[3] + " <br/> " + button[0] + " " + button[1] ;				
+			}
+
+			document.addEventListener("touchstart",handler);
+                        document.addEventListener("touchmove",handler);
+                        document.addEventListener("touchend",handler);
+
+
+		});
+	</script>
+    </body>
+
+</html>
+
+

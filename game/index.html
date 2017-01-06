@@ -1,0 +1,146 @@
+<html>
+	<head>        
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
+       		<meta name="theme-color" content="#212121" />
+        	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >
+		<script src="https://use.fontawesome.com/9d9d9e8b67.js"></script> <!-- fontawesome icon!-->
+		<title>GasConsole</title>
+		<style>
+			html {
+				overflow: hidden ;
+			}
+
+			body {
+				overflow:hidden;
+				user-select:none;
+				width: 100% ;
+				height: 100% ;
+				background: #303030 ;
+				color: white ;
+				text-align: center ;
+				font-family: Arial ;
+				margin: 0px;
+				padding: 0px ;
+			}
+
+			#titolo {
+				height: 15vh ;
+				width: 100vw ;
+				line-height: 15vh ;
+				font-size: 8vh ;
+				vertical-align: middle ;
+			}
+
+			#frame {
+				height: 85vh ;
+				width: 100vw ;
+				min-height: 500px ;
+				text-align: center ;
+				position: relative ;
+			}
+				
+			#left {
+				position: absolute ;
+				left: 0% ;
+				top: calc( 50% - 250px );
+				height: 500px ;
+				width: calc(46% - 500px);
+				padding: 1% ;
+			}
+			#box {
+				position: absolute ;
+				background: #424242 ;
+				width: 1000px ;
+				height: 500px ;
+				max-width: 1000px ;		
+				min-width: 1000px ;
+				min-height: 500px ;
+				max-height: 500px ;
+				left: calc( 50% - 500px );
+				top: calc(  50% - 250px );
+                                box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+			}
+
+			#iframe {
+				width: 100% ;
+				height: 100% ;
+				border: 0px ;
+			}
+			
+		
+			.icon {
+				font-size: 5vw ;	
+				width: 50%;
+				margin-top: 25% ;
+				margin-bottom: 25% ;
+				cursor: pointer ;
+			}
+
+			#lcont {
+				position: absolute ;
+				top: 50% ;
+				width: 98% ;
+				transform: translateY(-50%);
+			}
+
+
+			#power { color: #F44336 ; }
+			#home { color: #FFFFFF ; }
+			#refresh { color: #2196F3 ; }
+		</style>
+	</head>
+	<body>
+	
+		<div id="titolo">GasConsole</div>
+		<div id="frame">
+			<div id="left">
+				<div id="lcont">
+					<div id="power"   class="icon fa fa-power-off"></div>
+					<div id="home"    class="icon fa fa-home"></div>                               
+					<div id="refresh" class="icon fa fa-refresh"></div>
+				</div>
+			</div>
+			<div id="box">
+				<iframe id="iframe" src="off.html" name="console"></iframe>
+			</div>
+		</div>
+		<script>
+			var power   = document.getElementById(  "power");
+                        var home    = document.getElementById(   "home");
+                        var refresh = document.getElementById("refresh");
+			var iframe  = document.getElementById( "iframe");
+
+			document.addEventListener("DOMContentLoaded",function(){
+				
+				power.onclick = function(){
+					var currentUrl = iframe.contentWindow.document.location.href ;
+					if( currentUrl.indexOf("off.html") != -1 )
+					{
+						iframe.src = "home.html" ;
+						power.style.color = "#4CAF50" ;
+					}		
+					else 
+					{
+						iframe.src = "off.html" ;
+						power.style.color = "#F44336" ;
+					}
+				};
+
+				home.onclick = function(){
+                                        var currentUrl = iframe.contentWindow.document.location.href ;
+                                        if( currentUrl.indexOf("off.html") == -1 )
+                                                iframe.src = "home.html" ;
+				};
+				
+
+                                refresh.onclick = function(){
+                                        var currentUrl = iframe.contentWindow.document.location.href ;
+                                        if( currentUrl.indexOf("off.html") == -1 )
+                                                iframe.src = currentUrl ;
+                                };
+
+			},true);
+		</script>
+	</body>
+</html>

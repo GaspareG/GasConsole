@@ -1,0 +1,302 @@
+<html>
+    <head>
+        <title>Steering Wheel</title>
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
+        <meta name="theme-color" content="#888" />
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >        
+        <style>
+            body {
+                font-family: arial;
+                overflow:hidden;
+                user-select:none; 
+                background: #888; 
+                height: 100%; 
+                width: 100%; 
+                margin: 0px; 
+            }
+	    #landscape { 
+		height: 100%; 
+		width: 100%; 
+		background: #F44336;
+		z-index: 100; 
+		position: fixed; 
+		top: 0px; 
+		left: 0px;
+		line-height: 50px ;
+		vertical-align: middle ;
+		text-align: center  ;
+		font-size: 40px;
+		font-weight: bold ;		
+	    }
+
+	    #error { 
+		position: absolute ;
+		top: 40% ;
+		width: 80% ;
+		height: 50% ;
+		left: 10% ;
+		transform: translateY(-50%);
+	    }
+
+	    @-webkit-keyframes rotate {
+  		0%   { -webkit-transform: rotate(45deg); }
+            	100% { -webkit-transform: rotate(-45deg); }
+	    }
+
+	    #error img {
+		width: auto ;
+		height: auto ;
+    		-webkit-animation-name: rotate; 
+    		-webkit-animation-duration: 3s; 
+    		-webkit-animation-iteration-count: infinite;
+		-webkit-transition-timing-function: linear;
+	    }
+
+	    @media only screen and (orientation:portrait){
+   		#landscape { display: block; z-index: 100; }
+            }
+	
+	    @media only screen and (orientation:landscape){
+		#landscape { display: none ; }
+	    }
+
+            #ruota { 
+                width: 40vw ;
+		height: auto ;
+		position: absolute ;		
+		vertical-align: middle;
+		top: calc(50vh - 20vw)  ;
+		left: 30vw ;
+            }
+            #debug { 
+                position: fixed; 
+                width: 30%; 
+                height:20%; 
+                border: 1px black solid; 
+                left: 5px; 
+                top: 5px;
+		color: white;
+		background: #333; 
+                display: block;  
+                background: #C8D1DB;
+                color: #66798F;
+		border-radius: 15px;
+		padding: 5px ;	
+		overflow: hidden ;
+                border: 3px #66798F solid;
+            }
+            #vel { 
+                border: 1px black solid; 
+                position: fixed; 
+                right: 1%; 
+                bottom: 2%; 
+                width: 8%; 
+                height: 96%;
+                background: #00fc10; /* Old browsers */
+                background: -moz-linear-gradient(bottom,  #00fc10 0%, #f7ff63 50%, #ff4444 100%); /* FF3.6-15 */
+                background: -webkit-linear-gradient(bottom,  #00fc10 0%,#f7ff63 50%,#ff4444 100%); /* Chrome10-25,Safari5.1-6 */
+                background: linear-gradient(to top,  #00fc10 0%,#f7ff63 50%,#ff4444 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00fc10', endColorstr='#ff4444',GradientType=0 ); /* IE6-9 */
+            }
+            #velcover { 
+                border: 1px #888 solid; 
+                border-bottom: 1px black solid; 
+                position: fixed;
+                right: 1%;
+                top: 0%;
+                width: 8%;
+                background: #888;
+                height: 0%; 
+            }
+            #left { 
+                position: fixed; 
+                left: 12%; 
+                top: 30%;
+            }
+            #right { 
+                position: fixed; 
+                right: 12%; 
+                top: 30%; 
+            }
+            .active { 
+                box-shadow: 0px 0px 10px 5px #66798F; 
+            }
+            .button { 
+                border-radius: 50%;
+                vertical-align: middle;
+                display: flex;
+                width: 15%;
+                font-weight: bold;
+                justify-content:center;
+                align-items:center;			
+                height: 0px;
+                font-size: 50px;
+                padding-bottom: 15%;
+                background: #C8D1DB;
+                color: #66798F;
+                border: 5px #66798F solid;
+                line-height: 100%;
+            }
+            #left:before { 
+                content: "A"; 
+            }
+            #right:before { 
+                content: "B"; 
+            }
+            .button:before { 
+                vertical-align: middle; 
+                line-height:1; 
+                padding-top:100%; 
+            }
+            .button div {
+                height: 100%; 
+                width: 100%;
+                vertical-align: middle; 
+                line-height: inherit;
+                position: absolute; 
+                top: 0%; 
+                border: 1px black solid; 
+            }
+        </style>
+    </head>
+
+    <body>
+	<div id="landscape">
+		<div id="error">
+		Please rotate your phone!<br/><br/>
+		<img src="rotate.png" />
+		</div>
+	</div>
+        <center>
+            <div id="debug"></div>
+            <img src="wheel.png" id="ruota" />
+            <div id="vel"></div>
+            <div id="velcover"></div>
+            <div class="button" id="left"></div>
+            <div class="button" id="right"></div>
+        </center>
+
+        <script>
+            var x;
+            var y;
+            var ba = 0;
+            var bb = 0;
+
+            var left = document.getElementById("left");
+            var right = document.getElementById("right");
+
+            document.addEventListener("DOMContentLoaded",function(){
+
+            left.addEventListener("touchstart",function(){
+		ba++;
+	    });
+            right.addEventListener("touchstart",function(){
+		bb++;
+	    });
+
+            function getOffset(el) {
+                el = el.getBoundingClientRect();
+                return {
+                        left: el.left + window.scrollX,
+                        top: el.top + window.scrollY
+                };
+            }
+
+             // TODO CREAZIONE CONNESSIONE WEBSOCKET
+             var wsServer = new WebSocket("ws://88.198.124.71:6060");
+             var wsReady = false ;
+
+             wsServer.onopen = function(){
+                     wsServer.send("CLIENT");
+                     wsReady = true ;
+             };
+
+             wsServer.onmessage = function(event){
+                       document.getElementById("debug").innerHTML = event.data ;
+             };
+
+	     	var buttonA = false ;
+	     	var buttonB = false ;
+		var wheel = { deg: 0, perc: 0 };
+		setInterval(function(){
+			var toSend = {
+				controller: "wheel",
+				wheel: {
+					button: {
+						A: buttonA,
+						B: buttonB
+					},
+					direction: {
+						deg: wheel.deg,
+						vel: wheel.perc
+					}
+				}
+			};
+//			document.getElementById("debug").innerHTML = JSON.stringify(toSend); 
+                        if( wsReady )
+				wsServer.send(JSON.stringify(toSend));
+
+		},35);
+	   		
+	    function detect(event){
+		event.preventDefault();
+		var offA = getOffset(left);
+		var offB = getOffset(right);
+		var cA = [offA.left+ left.scrollWidth/2, offA.top+ left.scrollHeight/2];
+                var cB = [offB.left+right.scrollWidth/2, offB.top+right.scrollHeight/2];
+		var hitA = false;
+		var hitB = false;
+		var r = left.scrollHeight/2;
+		for(var i=0; i<event.touches.length; i++)
+		{
+			var pos = event.touches[i];
+			var distA = (pos.pageX-cA[0])*(pos.pageX-cA[0])+(pos.pageY-cA[1])*(pos.pageY-cA[1]);
+                        var distB = (pos.pageX-cB[0])*(pos.pageX-cB[0])+(pos.pageY-cB[1])*(pos.pageY-cB[1]);
+			if( distA <= r*r ) hitA = true ;
+			if( distB <= r*r ) hitB = true ;
+		}
+		buttonA = hitA ;
+		buttonB = hitB ;		
+		 left.className = "button" + (hitA?" active": "");
+		right.className = "button" + (hitB?" active": "");
+	    };
+
+	    document.addEventListener("touchstart",detect);
+            document.addEventListener("touchmove",detect);
+            document.addEventListener("touchend",detect);
+	
+            function handleOrientation(event) {
+                var tx = event.beta; 
+                var ty = event.gamma;
+                x = tx;
+                x += 90;
+		x = (x+360)%360;
+                var orientation = screen.orientation || screen.mozOrientation || screen.msOrientation;
+                if (orientation.type === "landscape-secondary")
+		{
+                  //  x = x*(-1);
+		  x = (270+ (270-x))%360 ;
+                }
+		if( x <= 180 ) x += 180 ;
+		y = 90-Math.abs(ty);
+			
+//                document.getElementById("debug").innerHTML = "X = "+parseInt(x)+" | Y = "+parseInt(y)+"<br>A = "+ba+" | B = "+bb;
+                ruota = document.getElementById("ruota");
+		if(x >= 180 &&  x <= 360)
+	                ruota.style.transform = "rotate("+( (90+x))+"deg)";
+		wheel.perc = parseInt((10*y)/9);
+		wheel.deg = parseInt(x-270) ;
+                document.getElementById("velcover").style.height = (100-96*y/90)+"%";
+            }
+
+            window.addEventListener('deviceorientation', handleOrientation);
+	
+	    });
+        </script>
+
+    </body>
+
+</html>
+
+

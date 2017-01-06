@@ -1,0 +1,115 @@
+<html>
+	<head>
+        	<title>GasJoystick</title>
+	        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
+        	<meta name="theme-color" content="#AAA" />
+		<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >	
+        	<style>
+			html {
+				overflow: hidden ; 
+			}
+
+            		body {
+                		font-family: arial;
+                		overflow:hidden;
+                		background: #AAA;
+                		height: 96vh ;
+                		width: 100%;
+                		margin: 0px;
+				padding: 2vh ;
+				padding-left: 0px ;
+				padding-right: 0px ;
+				text-align: center ;
+				min-width: 360px ;
+				min-height: 480px ;
+				-webkit-user-select: none;
+				-o-user-select: none;
+				user-select: none;
+				-webkit-touch-callout:none;
+            		}
+
+			.preview {
+				margin: 4vh ;
+				font-size: 4vh ;
+				font-weight: bold ;
+				line-height: 6vh ;
+				vertical-align: middle ;
+			}
+
+			.preview img {
+				border-radius: 5% ;
+				width: 80% ;
+				max-width: 30vh ;
+				border: 0.75vh black solid ;
+			}
+
+			#title {
+				font-size: 30px ;
+				font-weight: bold ;
+				margin: 2vh ;
+			}
+
+			.preview:active {
+				color: #3297FD ;
+			}
+			
+			.preview:active img {
+				border-color: #3297FD ;
+			}
+
+			@media only screen and (orientation:landscape){
+				.preview { 
+					float: left ;
+					width: 26.5vw ;
+					height: 70vh ;
+					margin: 3.4vw ;
+					font-size: 6vh ;
+					line-height: 8vh ;
+				 }
+
+				.preview img {
+					max-width: 26vw ;
+				}		
+
+				#title { height: 15vh ; }
+		
+				.content {
+					margin-top: 50% ;
+					transform: translateY(-50%);
+				}
+            		}
+		</style>
+	</head>
+	<body>
+
+		<div id="title">Select your joystick!</div>
+		<center>
+		<div class="preview" page="classic.html"><div class="content"><img src="classic.jpg" /> <br/>Classic Joystick</div></div>
+                <div class="preview" page="analog.html"><div class="content"><img src="analog.jpg" /> <br/>Analog Controller</div></div>
+                <div class="preview" page="wheel.html"><div class="content"><img src="steering.jpg" /> <br/>Steering Wheel</div></div>
+		</center>
+		<script>
+			document.oncontextmenu = function(event) {
+    				event.preventDefault();
+				event.stopPropagation(); 
+    				event.stopImmediatePropagation();
+    				return false;
+			};
+
+			var controller = document.querySelectorAll(".preview");
+			for(var i=0; i<controller.length; i++)
+			{
+				var clickEvent = ((document.ontouchstart!==null)?'click':'touchend');
+				controller[i].addEventListener(clickEvent,function(){
+					setTimeout((function(el){ 
+						return function(){
+							location.href = el.getAttribute("page");
+						}		
+					})(this),200);
+				});
+			}
+		</script>
+	</body>
+
+</html>
+

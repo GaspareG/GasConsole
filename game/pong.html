@@ -1,0 +1,186 @@
+
+<html>
+	<head>
+			<title>Joystick</title>
+			<style>
+				body {
+					background: black ;
+					margin: 0px ;
+					padding: 0px ;
+				}
+		
+				canvas { float: left ; }
+			</style>
+	</head>
+	<body>
+
+		<script>	
+			var posizioni = [[0,0],[0,0]] ;
+
+			// TODO CREAZIONE CONNESSIONE WEBSOCKET
+			var wsServer = new WebSocket("ws://88.198.124.71:6060");
+			var wsReady = false ;
+
+			wsServer.onopen = function(){
+				wsServer.send("SERVER");
+				wsReady = true ;
+			};
+			var inputData = [] ;
+			var data = [] ;
+			var players = 0 ;
+
+			function parseInput()
+			{
+				if(data.length < 2 ) return;
+				players = data.length ;
+				
+				for(var i=0; i<2; i++)
+				{
+					if( data[i].controller == "analog" )
+					{
+						var potY = Math.sin(data[i].analog.left.deg*Math.PI/180)*4 ;
+						posizioni[i][1] -= potY ;
+						posizioni[i][1] = Math.max(0,Math.min(posizioni[i][1],90));
+					}
+					else if(data[i].controller == "classic" )
+					{       
+						var dir = 0 ;
+						if( data[i].classic.direction.top )
+							dir = +1 ;
+						else if( data[i].classic.direction.down )
+							dir = -1 ;
+
+						posizioni[i][1] -= 4*dir;
+                                                posizioni[i][1] = Math.max(0,Math.min(posizioni[i][1],90)); 				
+					}
+					else if(data[i].controller == "wheel" )
+					{
+						posizioni[i][1] = data[i].wheel.direction.vel ;
+					}
+				}				
+			}
+
+			wsServer.onmessage = function(event){
+				data = JSON.parse(event.data);
+				parseInput();				
+			};
+	
+		</script>
+
+		<script>
+
+		var canvas = document.createElement('canvas');
+		canvas.setAttribute('width', window.innerWidth);
+		canvas.setAttribute('height', window.innerHeight);
+		canvas.setAttribute('id', 'canvas');
+		document.body.appendChild(canvas);
+		var ctx = canvas.getContext("2d");
+
+		var pallina = [window.innerWidth/2,window.innerHeight/2] ;
+		var vel = [12,6] ;
+
+		var point = [0,0] ;
+
+		setInterval(function()
+		{
+			canvas.setAttribute('width', window.innerWidth);
+			canvas.setAttribute('height', window.innerHeight);
+			ctx.lineWidth=5;
+			var w = canvas.width ;
+			var h = canvas.height ;
+
+			if( players < 2 )
+				return;
+
+			var x  = posizioni[0][0] ;
+			var y  = posizioni[0][1] ;
+			var x2 = posizioni[1][0] ;
+			var y2 = posizioni[1][1] ;
+
+			ctx.fillStyle = "black";
+			ctx.fillRect(0,0,w,h);
+			
+			ctx.fillStyle = "white" ;
+			y = Math.min(90,y);
+			y = Math.max(0,y);
+			ctx.fillRect(10, (y/90)*(h-h/10), 20,h/4);
+
+			y2 = Math.min(90,y2);
+			y2 = Math.max(0,y2);
+			ctx.fillRect(w-30, (y2/90)*(h-h/10), 20,h/4);
+
+			pallina[0] += vel[0] ;
+			pallina[1] += vel[1] ;
+			if(pallina[0]<30)
+			{
+				if( pallina[1] >= (y/90)*(h-h/10) &&
+					pallina[1] <= (y/90)*(h-h/10)+h/4)
+				{
+					pallina[0] = 30;
+					vel[0]    *= -1 ;
+				}
+				else
+				{			
+					pallina = [window.innerWidth/2,window.innerHeight/2] ;
+					vel = [12,6] ;
+					point[1]++ ;
+				}
+			}
+			else if(pallina[0]+40>w)
+			{
+				if( pallina[1] >= (y2/90)*(h-h/10) &&
+					pallina[1] <= (y2/90)*(h-h/10)+h/4)
+				{
+					pallina[0] = w-40;
+					vel[0]    *= -1 ;
+				}
+				else
+				{			
+					pallina = [window.innerWidth/2,window.innerHeight/2] ;
+					vel = [12,6] ;
+					point[0]++ ;
+				}
+			}	
+
+			
+			if(pallina[1]<10)
+			{
+				pallina[1]=10;
+				vel[1] *= -1 ;
+			}
+			else if(pallina[1]+10>h)
+			{
+				pallina[1]=h-10;
+				vel[1] *= -1;
+			}
+
+			ctx.strokeStyle = "white" ;
+			ctx.beginPath();
+			ctx.arc(pallina[0],pallina[1],10,0,2*Math.PI,false);  
+			ctx.stroke();
+
+			y = Math.min(90,y);
+			y = Math.max(0,y);
+
+			ctx.font = "100px Arial";
+			ctx.fillStyle = "white";
+			ctx.textAlign="center"; 
+			ctx.fillText(point[0],w/4,150);
+			ctx.fillText(point[1],w/2+w/4,150);
+
+			ctx.setLineDash([5, 15]);
+
+			ctx.beginPath();
+			ctx.moveTo(w/2,0);
+			ctx.lineTo(w/2, h);
+			ctx.stroke();
+
+
+		},32);
+
+
+		</script>
+
+	</body>
+</html>
+

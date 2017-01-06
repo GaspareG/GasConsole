@@ -1,0 +1,271 @@
+<html>
+    <head>
+        <title>Analog Controller</title>
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
+        <meta name="theme-color" content="#888" />
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >        
+        <style>
+            body {
+                font-family: arial;
+                overflow:hidden;
+		user-select:none;
+                background: #888 ; 
+                height: 100%; 
+                width: 100%; 
+                margin: 0px; 
+            }
+
+	    #landscape { 
+		height: 100%; 
+		width: 100%; 
+		background: #F44336;
+		z-index: 100; 
+		position: fixed; 
+		top: 0px; 
+		left: 0px;
+		line-height: 50px ;
+		vertical-align: middle ;
+		text-align: center  ;
+		font-size: 40px;
+		font-weight: bold ;		
+	    }
+
+	    #error { 
+		position: absolute ;
+		top: 40% ;
+		width: 80% ;
+		height: 50% ;
+		left: 10% ;
+		transform: translateY(-50%);
+	    }
+
+	    @-webkit-keyframes rotate {
+  		0%   { -webkit-transform: rotate(45deg); }
+            	100% { -webkit-transform: rotate(-45deg); }
+	    }
+
+	    #error img {
+		width: auto ;
+		height: auto ;
+    		-webkit-animation-name: rotate; 
+    		-webkit-animation-duration: 3s; 
+    		-webkit-animation-iteration-count: infinite;
+		-webkit-transition-timing-function: linear;
+	    }
+
+	    @media only screen and (orientation:portrait){
+   		#landscape { display: block; z-index: 100; }
+            }
+	
+	    @media only screen and (orientation:landscape){
+		#landscape { display: none ; }
+	    }
+
+            .analog {
+		height: 33vw ;
+                width: 33vw ;
+		position: absolute ;
+		top: calc(40vh - 16.5vw);
+		border-radius: 50% ;
+                background: #ccc ;
+                border: 1vw black solid ;
+		max-height: 80vh ;
+		max-width: 80vh ;
+            }
+
+	    .analog div {
+                height: 50% ;
+		width:  50% ;
+		background: #999 ;
+		border-radius: 50%;
+		position: absolute ;
+		left: 25% ;
+		top:  25% ;
+		box-shadow: 0px 0px 10px 5px #555 ;
+	    }
+
+	    #left {
+		left: 11vw ;
+	    }
+	
+	   #right {
+		right: 11vw ;
+	   }
+
+	  #debug {
+		position: fixed ;
+		background: white ;
+		border: 1vw black solid ;
+		border-bottom: 0vw ;
+		width: 50% ;
+		bottom: 0% ;
+		left: 25% ;
+		height: 15vh ;
+		line-height: 15vh ;
+		vertical-align: middle ;
+		display: block ;
+		text-align: center ;
+		border-radius: 2vw 2vw 0px 0px ;
+	  }	
+	</style>
+    </head>
+
+    <body>
+	<div id="debug"></div>
+
+	<div id="left" class="analog"><div id="la"></div></div>
+	<div id="right" class="analog"><div id="lb"></div></div>
+	<div id="landscape">
+		<div id="error">
+		Please rotate your phone!<br/><br/>
+		<img src="rotate.png" />
+		</div>
+	</div>
+	<script>
+		var lb = document.getElementById("lb");
+		var la = document.getElementById("la");
+		var debug = document.getElementById("debug");
+
+		function getOffset(el) {
+			el = el.getBoundingClientRect();
+  			return {
+   				left: el.left + window.scrollX,
+   				top: el.top + window.scrollY
+  			}
+		}
+
+		var startAL, startAT;
+		var startBL, startBT;
+
+		var degA=0, percA=0 ;
+		var degB=0, percB=0 ;
+
+		var gameUpdate = null ;
+		var oDegA=0, oPercA=0;
+                var oDegB=0, oPercB=0;
+		
+		// TODO CREAZIONE CONNESSIONE WEBSOCKET
+		var wsServer = new WebSocket("ws://88.198.124.71:6060");
+		var wsReady = false ;
+
+		wsServer.onopen = function(){
+			wsServer.send("CLIENT");
+			wsReady = true ;
+		};
+
+		wsServer.onmessage = function(event){
+	                debug.innerHTML = event.data;
+		};
+
+		document.addEventListener("DOMContentLoaded",function(){
+
+		gameUpdate = setInterval(function(){
+/*
+			if(oDegA==0&&oPercA==0&&degA!=0&&percA!=0)
+				console.log("L[start]");
+			else if(oDegA!=0&&oPercA!=0&&degA==0&&percA==0)
+				console.log("L[end]");
+			else if(oDegA!=degA || oPercA!=percA)
+				console.log("L[move]");
+//			console.log("L[DEG="+degA+"|PERC="+percA+"]");
+
+                        if(oDegB==0&&oPercB==0&&degB!=0&&percB!=0)
+                                console.log("R[start]");
+                        else if(oDegB!=0&&oPercB!=0&&degB==0&&percB==0)
+                                console.log("R[end]");
+                        else if(oDegB!=degB || oPercB!=percB)
+                                console.log("R[move]");
+//                      console.log("R[DEG="+degB+"|PERC="+percB+"]");
+*/
+			// TODO INVIO EVENTI WEB SOCKET
+			var toSend = {
+				controller: "analog",
+				analog: {
+					 left: { deg: degA, perc: percA },
+					right: { deg: degB, perc: percB }
+				}
+			};
+			if( wsReady )
+				wsServer.send(JSON.stringify(toSend));
+				
+			oDegA = degA ;
+			oDegB = degB ;
+			oPercA = percA ;
+			oPercB = percB ;
+		},1000/60);
+
+		function offset()
+		{
+			startAL = getOffset(la).left + la.scrollWidth/2 ;
+			startAT = getOffset(la).top + la.scrollHeight/2 ;
+			startBL = getOffset(lb).left + lb.scrollWidth/2 ;
+			startBT = getOffset(lb).top + lb.scrollHeight/2 ;
+		}
+		offset();
+		window.addEventListener("resize", offset);
+
+		la.addEventListener("touchmove",function(e){
+			e.preventDefault();
+			if(e.touches.length <= 0 ) return ;
+			var idx = 0 ;
+			if(e.touches.length > 1 )
+			{
+				if( e.touches[1].pageX < e.touches[0].pageX ) 
+					idx = 1 ;
+			}
+			var dx = startAL - e.touches[idx].pageX ;
+			var dy = startAT- e.touches[idx].pageY ;
+			var radius = Math.sqrt(2)*la.scrollWidth;
+			var dist = Math.sqrt(dx*dx+dy*dy);
+			dist = Math.min(la.scrollWidth/2+1,dist);
+			var alpha = Math.atan2(dy,dx);
+			degA = parseInt(alpha*180/Math.PI);
+			percA = Math.ceil(dist*2);	
+			la.style.top  = (la.scrollHeight/2+Math.sin(Math.PI+alpha)*dist)+"px" ; 
+			la.style.left = (la.scrollWidth/2+Math.cos(Math.PI+alpha)*dist)+"px" ;
+		},true);
+
+		la.addEventListener("touchend",function(e){
+			e.preventDefault();
+			la.style.top  = la.scrollWidth/2 ;
+			la.style.left = la.scrollHeight/2 ;
+			percA = degA = 0 ; 
+		});
+
+                lb.addEventListener("touchmove",function(e){
+                        e.preventDefault();
+                        if(e.touches.length <= 0 ) return ;
+                        var idx = 0 ;
+			if(e.touches.length > 1 )
+                        {
+                                if( e.touches[1].pageX > e.touches[0].pageX ) 
+                                        idx = 1 ;
+                        }
+                        var dx = startBL - e.touches[idx].pageX ;
+                        var dy = startBT - e.touches[idx].pageY ;
+			var radius = Math.sqrt(2)*lb.scrollWidth;
+			var dist = Math.sqrt(dx*dx+dy*dy);
+			dist = Math.min(lb.scrollWidth/2+1,dist);
+			var alpha = Math.atan2(dy,dx);
+			degB = parseInt(alpha*180/Math.PI);
+			percB = Math.ceil(dist*2);	
+			lb.style.top  = (lb.scrollHeight/2+Math.sin(Math.PI+alpha)*dist)+"px" ; 
+			lb.style.left = (lb.scrollWidth/2+Math.cos(Math.PI+alpha)*dist)+"px" ;
+                },true);
+
+                lb.addEventListener("touchend",function(e){
+                        e.preventDefault();
+                        lb.style.top  = lb.scrollHeight/2;
+                        lb.style.left = lb.scrollWidth/2 ;
+                        percB = degB = 0 ; 
+                });
+
+		},false);
+	</script>
+    </body>
+
+</html>
+
+
