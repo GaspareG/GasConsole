@@ -33,26 +33,40 @@
 			var point   = 0 ;
 
 			var asteroids = [] ;
-			
+			var spari     = [] ;
+
 			function addAsteroids(aRad,aPos)
-			{
-				var nuovo = { center: aPos, points: [], vel: [], radius: aRad };
-				nuovo.vel[0] = Math.random()*12-6;
-				nuovo.vel[1] = Math.random()*12-6;
+                        {
+                                var nuovo = { center: aPos, points: [], radius: aRad, vel:[] };
+                                nuovo.vel[0] = Math.random()*12-6;
+                                nuovo.vel[1] = Math.random()*12-6;
 
-				var punti = 2*parseInt(3+Math.random()*3);
-				for(var i=0; i<punti; i++)
-				{
-					var angolo = 360/punti*i ;
-					var distanza = aRad/2 + (aRad/2*Math.random());
-					nuovo.points.push([ Math.sin(angolo*Math.PI/180)*distanza, 
-						      Math.cos(angolo*Math.PI/180)*distanza ]);
-				}
-				asteroids.push(nuovo);
+                                var punti = parseInt(6+Math.random()*5);
+                                for(var i=0; i<punti; i++)
+                                {
+                                        var angolo = 360/punti*i ;
+                                        var distanza = aRad/2 + (aRad/2*Math.random());
+                                        nuovo.points.push([ Math.sin(angolo*Math.PI/180)*distanza, 
+                                                      Math.cos(angolo*Math.PI/180)*distanza ]);
+                                }
+                                asteroids.push(nuovo);
+                        }
+			
+			addAsteroids(60,[200,250]);
+			addAsteroids(60,[800,250]);
+			addAsteroids(30,[500,100]);
+			addAsteroids(30,[500,400]);
+
+			function spara(){
+				if( player &&	!offline )		
+				spari.push({
+					angolo: angle-90 ,
+					posizione: [position[0],position[1]],
+					vel: 10 				
+				});
 			}
-
-
-			addAsteroids(40,[200,250]);
+	
+			setInterval(spara,300);
 
 			document.addEventListener("DOMContentLoaded",function(){
 
@@ -224,6 +238,23 @@
                                                 ctx.lineTo(asteroids[i].points[0][0],asteroids[i].points[0][1]);
 						ctx.stroke();
 						ctx.restore();
+					}
+
+					// Disegno spari
+					for(var i=0; i<spari.length; i++)		
+					{
+						spari[i].posizione[0] += Math.cos(spari[i].angolo*Math.PI/180)*spari[i].vel ;
+                                                spari[i].posizione[1] += Math.sin(spari[i].angolo*Math.PI/180)*spari[i].vel ;
+
+						ctx.save();
+                                                ctx.beginPath();
+                                                ctx.translate(spari[i].posizione[0], spari[i].posizione[1]);
+                                                ctx.moveTo(0,0);
+                                                ctx.lineTo( 10*Math.cos(spari[i].angolo*Math.PI/180),
+							    10*Math.sin(spari[i].angolo*Math.PI/180));
+                                                ctx.stroke();
+                                                ctx.restore();
+
 					}
 
 				},35);
