@@ -31,11 +31,12 @@
 			var player  = false ;
 			var offline = false ;
 			var point   = 0 ;
+			var morto   = false ;
 
 			var asteroids = [] ;
 			var spari     = [] ;
 
-			function addAsteroids(aRad,aPos)
+/*			function addAsteroids(aRad,aPos)
                         {
                                 var nuovo = { center: aPos, points: [], radius: aRad, vel:[] };
                                 nuovo.vel[0] = Math.random()*12-6;
@@ -50,7 +51,62 @@
                                                       Math.cos(angolo*Math.PI/180)*distanza ]);
                                 }
                                 asteroids.push(nuovo);
-                        }
+                        }*/
+
+			function addAsteroids(aRad,aPos)
+			{
+				var nuovo = { center: aPos, points: [], radius: aRad, vel:[] };
+				nuovo.vel[0] = Math.random()*12-6;
+				nuovo.vel[1] = Math.random()*12-6;
+
+				var lastop=2;
+				var punti = 2*parseInt(3+Math.random()*3);
+				for(var i=0; i<punti; i++)
+				{
+					if(Math.random()<0.75 || i==punti-1 || lastop==1)
+					{
+						lastop=0;
+						var angolo = 360/punti*i;
+						var a0 = aRad/2 + (aRad/2*Math.random());
+						nuovo.points.push([ Math.sin(angolo*Math.PI/180)*a0, 
+						Math.cos(angolo*Math.PI/180)*a0 ]);
+					}
+					else
+					{
+						lastop=1;
+						var angolo1 = 360/punti*i;
+						var angolo2 = 360/punti*(i+1);
+						i++;
+						var a0 = aRad/4 + (aRad/4*Math.random());
+						var a1 = 3*aRad/3 + (aRad/4*Math.random());
+						var b0 = aRad/4 + (aRad/4*Math.random());
+						var b1 = 3*aRad/4 + (aRad/4*Math.random());
+						if(Math.random()<0.5)
+						{
+							nuovo.points.push([ Math.sin(angolo1*Math.PI/180)*a0, 
+							Math.cos(angolo1*Math.PI/180)*a0 ]);
+							nuovo.points.push([ Math.sin(angolo2*Math.PI/180)*b0, 
+							Math.cos(angolo2*Math.PI/180)*b0 ]);
+							nuovo.points.push([ Math.sin(angolo1*Math.PI/180)*a1, 
+							Math.cos(angolo1*Math.PI/180)*a1 ]);
+							nuovo.points.push([ Math.sin(angolo2*Math.PI/180)*b1, 
+							Math.cos(angolo2*Math.PI/180)*b1 ]);
+						}
+						else
+						{
+							nuovo.points.push([ Math.sin(angolo1*Math.PI/180)*a1, 
+							Math.cos(angolo1*Math.PI/180)*a1 ]);
+							nuovo.points.push([ Math.sin(angolo2*Math.PI/180)*b1, 
+							Math.cos(angolo2*Math.PI/180)*b1 ]);
+							nuovo.points.push([ Math.sin(angolo1*Math.PI/180)*a0, 
+							Math.cos(angolo1*Math.PI/180)*a0 ]);
+							nuovo.points.push([ Math.sin(angolo2*Math.PI/180)*b0, 
+							Math.cos(angolo2*Math.PI/180)*b0 ]);
+						}
+					}
+				}
+				asteroids.push(nuovo);
+			}
 			
 			addAsteroids(60,[200,250]);
 			addAsteroids(60,[800,250]);
@@ -58,7 +114,7 @@
 			addAsteroids(30,[500,400]);
 
 			function spara(){
-				if( player &&	!offline )		
+				if( player && !offline && !morto )		
 				spari.push({
 					angolo: angle-90 ,
 					posizione: [position[0],position[1]],
@@ -84,6 +140,7 @@
 					var data = JSON.parse(event.data);
 					player  = false ;
 					offline = false ;
+					
 					if( data.length >= 1 )
 					{
 						player = true ;
@@ -92,7 +149,7 @@
 							offline = true ;
 							return ;	
 						}
-
+						if( morto ) return ;
 						switch(data[0].controller)
 						{
 							case "wheel":
@@ -208,6 +265,20 @@
                                                 return;
 					}	
 
+                                        // Morto player
+                                        if( morto )
+                                        {
+                                                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                                                ctx.fillRect(0,0,width,height);
+                                                ctx.font = "50px Arial" ;
+                                                ctx.textAlign = "center" ;
+                                                ctx.fillStyle = "white" ;
+                                                ctx.fillText("You are dead!", width/2,height/2);
+						ctx.font = "40px Arial" ;
+						ctx.fillText(point + " Points",width/2,height/2+60);	
+                                                return;
+                                        }  
+
 					// Game!!				
 
 					// Asteroids muovo
@@ -241,6 +312,7 @@
 					}
 
 					// Disegno spari
+					var sparin= [] ;
 					for(var i=0; i<spari.length; i++)		
 					{
 						spari[i].posizione[0] += Math.cos(spari[i].angolo*Math.PI/180)*spari[i].vel ;
@@ -254,8 +326,73 @@
 							    10*Math.sin(spari[i].angolo*Math.PI/180));
                                                 ctx.stroke();
                                                 ctx.restore();
-
+						// Check se devo rimuovere
+						if( spari[i].posizione[0] < -10 ) continue ;
+						if( spari[i].posizione[1] < -10 ) continue ;
+						if( spari[i].posizione[0] > width+10 ) continue ;
+						if( spari[i].posizione[1] > height+10 ) continue ;
+						sparin.push(spari[i]); 
 					}
+					spari = sparin ;
+
+					// Collisione asteroidi-omino
+					for(var i=0; i<asteroids.length; i++)
+					{
+						var centerA = asteroids[i].center ;
+						var centerB = [position[0],position[1]];
+						var radiusA = asteroids[i].radius ;
+						var radiusB = 22.36
+						var distsQ = (centerA[0]-centerB[0])*(centerA[0]-centerB[0])+ (centerA[1]-centerB[1])*(centerA[1]-centerB[1]);
+						if( distsQ <= radiusA*radiusA+radiusB*radiusB)
+						{
+							morto = true ;
+							return ;
+						}
+					}
+					
+					// Collisione spari-asteroidi
+					var nasteroids = [] ;
+					var spariUsati = [] ;
+                                        for(var i=0; i<asteroids.length; i++)
+                                        {
+						var distrutto = false ;
+                                                var centerA = asteroids[i].center ;
+                                                var radiusA = asteroids[i].radius ;
+						for(var j=0; j<spari.length; j++)
+						{
+							if(spariUsati[j]) continue ;
+
+							var centerB = [spari[j].posizione[0],spari[j].posizione[1]];
+							var radiusB = 10 ;
+	                                                var distsQ = (centerA[0]-centerB[0])*(centerA[0]-centerB[0])+(centerA[1]-centerB[1])*(centerA[1]-centerB[1]);
+        	                                        if( distsQ <= radiusA*radiusA+radiusB*radiusB )
+							{
+								point += asteroids[i].radius ;
+								if( radiusA > 15 )
+								{
+						                        addAsteroids(radiusA/2,[centerA[0],centerA[1]]);
+									if( Math.random() < 0.3 )
+										addAsteroids(radiusA/2,[centerA[0],centerA[1]]);
+								}
+								else
+								{
+                                                                        addAsteroids(30,[centerA[0],centerA[1]]);
+                                                                        if( Math.random() < 0.3 )
+										addAsteroids(60,[centerA[0],centerA[1]]);
+								}
+
+								spariUsati[j] = true ;
+								distrutto = true ;
+								break ;
+							}
+						}
+						if( !distrutto ) nasteroids.push(asteroids[i]);
+                                        }
+					var nspari = [] ;
+					for(var i=0; i<spari.length; i++)
+						if(!spariUsati[i]) nspari.push(spari[i]);					
+					spari = nspari ;
+					asteroids = nasteroids ;
 
 				},35);
 		
