@@ -32,6 +32,28 @@
 			var offline = false ;
 			var point   = 0 ;
 
+			var asteroids = [] ;
+			
+			function addAsteroids(aRad,aPos)
+			{
+				var nuovo = { center: aPos, points: [], vel: [], radius: aRad };
+				nuovo.vel[0] = Math.random()*12-6;
+				nuovo.vel[1] = Math.random()*12-6;
+
+				var punti = 2*parseInt(3+Math.random()*3);
+				for(var i=0; i<punti; i++)
+				{
+					var angolo = 360/punti*i ;
+					var distanza = aRad/2 + (aRad/2*Math.random());
+					nuovo.points.push([ Math.sin(angolo*Math.PI/180)*distanza, 
+						      Math.cos(angolo*Math.PI/180)*distanza ]);
+				}
+				asteroids.push(nuovo);
+			}
+
+
+			addAsteroids(40,[200,250]);
+
 			document.addEventListener("DOMContentLoaded",function(){
 
 				// Connessione WebSocket
@@ -129,7 +151,12 @@
 					ctx.fillStyle = "white" ;
 					ctx.strokeStyle = "white" ;
 					ctx.lineWidth = 3 ;
-				
+
+					// Punti
+					ctx.font = "50px Arial" ;
+					ctx.textAlign = "center" ;
+					ctx.fillText(point, width-75,75);
+		
 					// Cursore Giocatore
 					ctx.save();
 					ctx.beginPath();
@@ -146,18 +173,59 @@
 					// Wait player
 					if( !player )
 					{
-
+						ctx.fillStyle = "rgba(0,0,0,0.5)";
+						ctx.fillRect(0,0,width,height);
+		                                ctx.font = "50px Arial" ;
+	                                        ctx.textAlign = "center" ;
+						ctx.fillStyle = "white" ;
+        	                                ctx.fillText("Waiting for Player!", width/2,height/2);
 						return;
 					} 
 
 					// Offline player
 					if( offline )
 					{
-	
-						return;
+                                                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                                                ctx.fillRect(0,0,width,height);
+                                                ctx.font = "50px Arial" ;
+                                                ctx.textAlign = "center" ;
+                                                ctx.fillStyle = "white" ;
+                                                ctx.fillText("Player offline!", width/2,height/2);
+                                                return;
 					}	
 
 					// Game!!				
+
+					// Asteroids muovo
+					for(var i=0; i<asteroids.length; i++)
+					{
+						asteroids[i].center[0] += asteroids[i].vel[0] ;
+						asteroids[i].center[1] += asteroids[i].vel[1] ;
+						if( asteroids[i].center[0] < -asteroids[i].radius )
+							asteroids[i].center[0] = width ;
+						else if( asteroids[i].center[0] - asteroids[i].radius >= width )
+							asteroids[i].center[0] = -asteroids[i].radius ;
+                                                if( asteroids[i].center[1] < -asteroids[i].radius )
+                                                        asteroids[i].center[1] = height ;
+                                                else if( asteroids[i].center[1] - asteroids[i].radius >= height )
+                                                        asteroids[i].center[1] = -asteroids[i].radius ;
+
+					}
+
+					// Asteroids disegno
+					for(var i=0; i < asteroids.length; i++)
+					{
+						ctx.beginPath();
+						ctx.save();
+						ctx.translate(asteroids[i].center[0], asteroids[i].center[1]);                                      
+						ctx.moveTo(asteroids[i].points[0][0],asteroids[i].points[0][1]);
+						for(var j=1; j<asteroids[i].points.length; j++)
+	                                               ctx.lineTo(asteroids[i].points[j][0],asteroids[i].points[j][1]);
+                                                ctx.lineTo(asteroids[i].points[0][0],asteroids[i].points[0][1]);
+						ctx.stroke();
+						ctx.restore();
+					}
+
 				},35);
 		
 			});				
