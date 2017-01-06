@@ -46,6 +46,7 @@
                                 [0,0,1,1,2,2,1,1,0,0],
                                 [0,0,0,1,1,1,1,0,0,0],
 			] ;
+			
 			var color = ["#212121","#00796B", "#FFA000", "#FF4081","#90A4AE"] ;
 
 			document.addEventListener("DOMContentLoaded",function(){
@@ -208,6 +209,7 @@
 					pallina[0] += vel[0] ;
 					pallina[1] += vel[1] ;
 
+					// Collisione pallina muri / giocatore + morte
 					if( pallina[0]-15 <= 0 )
 					{
 						pallina[0] = 16 ;
@@ -231,7 +233,7 @@
 						{
 							if( vite == 0 ) morto = true ;
 							else vite-- ;
-
+							pos = 50 ;
                         				pallina = [width/2, height/2.25] ;
 							vel = [ Math.random()*10-5,10] ;
 						}
@@ -240,9 +242,30 @@
 	                                                pallina[1] = height-curSize[1]-21-20 ;
         	                                        vel[1] *= -1 ;
 						}
-
                                         }
 
+					// Collisione Pallina-Blocchi
+                                        for(var i=0; i<tiles.length; i++)
+                                        {
+                                                var tw = width/tiles[i].length ;
+                                                var th = 20 ;
+                                                for(var j=0; j<tiles[i].length; j++)
+                                                {
+                                                        if( !tiles[i][j] ) continue ;
+							var dx = pallina[0] - tw*j+2 + 2 ;
+							var dy = pallina[1] - th*(1+i)+2 ;
+							if( dx >= -15 && dx <= tw-4+15 && dy >= -15 && dy <= th-4+15 )
+							{
+								point += tiles[i][j]*10 ;
+								tiles[i][j]-- ;
+								pallina[0] -= vel[0]/2 ;
+								pallina[1] -= vel[1]/2 ;
+								vel[1] *= -1 ;
+								
+							}
+//                                                        ctx.fillRect(tw*j+2,th*(1+i)+2,tw-4,th-4);
+                                                }
+                                        }				
 
 				},35);
 		
