@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Game3</title>
+		<title>Game2</title>
 		<style>
 			body {
 				margin: 0px ;
@@ -224,10 +224,23 @@
                                                 pallina[1] = 16 ;
                                                 vel[1] *= -1 ;
                                         }
-                                        else if( pallina[1]+15 >= height )
+                                        else if( pallina[1]+15 >= height-curSize[1]-20  )
                                         {
-                                                pallina[1] = height-16 ;
-                                                vel[1] *= -1 ;
+						var diff = pallina[0]-(width-curSize[0])*(pos/100);
+						if( diff < 0 || diff > curSize[0] )
+						{
+							if( vite == 0 ) morto = true ;
+							else vite-- ;
+
+                        				pallina = [width/2, height/2.25] ;
+							vel = [ Math.random()*10-5,10] ;
+						}
+						else
+						{
+	                                                pallina[1] = height-curSize[1]-21-20 ;
+        	                                        vel[1] *= -1 ;
+						}
+
                                         }
 
 
