@@ -26,7 +26,8 @@
 
 			var bSize   = [25,25] ;
 			var pos     = [1,8] ;
-
+			var frame   = 0 ;		
+	
 			var player  = false ;
 			var offline = false ;
 			var point   = 0 ;
@@ -116,39 +117,16 @@
 					ctx.strokeStyle = "white" ;
 					ctx.lineWidth = 3 ;
 
-					// Punti
-					ctx.font = "50px Arial" ;
-					ctx.textAlign = "right" ;
-					ctx.fillText(point, width-20,50);
-
-					// Vite 
-					ctx.fillStyle = "#D50000" ;
-
-					for(var i=0; i<vite ; i++)
-					{
-						var x = 20+i*50;
-						var y = 10 ;
-						ctx.beginPath();
-						ctx.moveTo(x+20,y+40);
-						ctx.lineTo(x+36,y+15);
-						ctx.lineTo(x+4,y+15);
-						ctx.fill();	
-						ctx.beginPath();
-						ctx.arc(x+12,y+15,8,Math.PI,2*Math.PI);
-						ctx.fill();
-                                                ctx.beginPath();
-                                                ctx.arc(x+28,y+15,8,Math.PI,2*Math.PI);
-                                                ctx.fill();					
-					}		
-
 					// Cursore Giocatore
+					frame++ ;
+					var add = Math.abs(Math.sin(10*frame*Math.PI/180))/2 ;
 
 					ctx.fillStyle = "#EEFF41" ;
 					ctx.beginPath();
-					ctx.arc(pos[0]*50+25, pos[1]*50+25,25, 0.25 * Math.PI, 1.25 * Math.PI, false);
+					ctx.arc(pos[0]*50+25, pos[1]*50+25,25, add+0.25*Math.PI-Math.PI/8, add+1.25 * Math.PI - Math.PI/8, false);
 					ctx.fill();
 					ctx.beginPath();
-					ctx.arc(pos[0]*50+25, pos[1]*50+25,25, 0.75 * Math.PI, 1.75 * Math.PI, false);
+					ctx.arc(pos[0]*50+25, pos[1]*50+25,25, 0.75 * Math.PI -add + Math.PI/8, 1.75 * Math.PI -add + Math.PI/8, false);
 					ctx.fill();
 
 					// Livello
@@ -249,7 +227,7 @@
                                                                         ctx.fillRect(x-tw/2, y-th/4, tw, th/2);
                                                                 break;
 								case 9:
-									ctx.fillStyle = "#EEFF41" ;
+									ctx.fillStyle = "#FFF9C4" ;
 									ctx.beginPath();
 									ctx.arc(tw*j+tw/2, th*i+th/2, tw/10, 0, Math.PI*2);
 									ctx.fill();
@@ -257,8 +235,35 @@
 							}
 						}						
 					}
+
+                                        // Punti
+                                        ctx.font = "50px Arial" ;
+					ctx.fillStyle = "white" ;
+                                        ctx.textAlign = "right" ;
+                                        ctx.fillText(point, width-10,50);
+
+                                        // Vite
+                                        ctx.fillStyle = "#D50000" ;
+
+                                        for(var i=0; i<vite ; i++)
+                                        {
+                                                var x = 35+i*35;
+                                                var y = 10 ;
+                                                ctx.beginPath();
+                                                ctx.moveTo(x+20,y+30);
+                                                ctx.lineTo(x+32,y+10);
+                                                ctx.lineTo(x+8,y+10);
+                                                ctx.fill();     
+                                                ctx.beginPath();
+                                                ctx.arc(x+14,y+10,6,Math.PI,2*Math.PI);
+                                                ctx.fill();
+                                                ctx.beginPath();
+                                                ctx.arc(x+26,y+10,6,Math.PI,2*Math.PI);
+                                                ctx.fill();
+                                        }
 				
 					return ;
+
 					// Wait player
 					if( !player )
 					{
