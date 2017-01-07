@@ -32,7 +32,7 @@
 			var point   = [0,0] ;
 
 			var pallina = [width/2, height/2] ;
-			var vel     = [4.5,10] ;
+			var vel     = [10,3.5] ;
 
 			document.addEventListener("DOMContentLoaded",function(){
 
@@ -155,10 +155,63 @@
 */
 					// Game!!				
 
-//					// Muovo la pallina
-//					pallina[0] += vel[0] ;
-//					pallina[1] += vel[1] ;
+					// Muovo la pallina
+					pallina[0] += vel[0] ;
+					pallina[1] += vel[1] ;
 
+					if( pallina[0]+15 >= width-30-curSize[0] )
+					{
+
+						// Check collisione
+						var delta = pallina[1] - (height-curSize[1])*(pos[0]/100) ;
+						if( (delta < 0 || delta > curSize[1]) ) 
+						{
+							if( pallina[0]+15 >= width )
+							{
+								point[0]++;
+								pallina = [width/2,height/2] ;
+								vel[0] *= -1 ;
+								vel[1] = (Math.random()*10)-5 ;
+							}
+						}
+						else {
+							vel[0] *= -1 ;
+							pallina[0] = width-30-curSize[0]-16 ;
+						}
+					}
+					else if( pallina[0]-15 <= 30+curSize[0] )
+					{
+						// Check collision
+                                                var delta = pallina[1] - (height-curSize[1])*(pos[1]/100) ;
+                                                if( delta < 0 || delta > curSize[1] )
+                                                {
+							if( pallina[0]-15 <= 0 )
+							{
+								point[1]++ ;
+								vel[0] *= -1 ;
+								vel[1] = (Math.random()*10)-5 ;
+								pallina = [width/2,height/2] ;
+							}
+						}
+						else
+						{
+							vel[0] *= -1 ;
+							pallina[0] = 30+curSize[0]+16 ;
+						}
+					}
+
+
+                                        if( pallina[1]+15 >= height )
+                                        {
+                                                vel[1] *= -1 ;
+						pallina[1] = height-16 ;
+
+                                        }
+                                        else if( pallina[1]-15 <= 0 )
+                                        {
+                                                vel[1] *= -1 ;
+                                                pallina[1] = 16 ;
+                                        }
 
 
 				},35);
