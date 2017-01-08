@@ -41,6 +41,7 @@
 			var point   = 0 ;
 			var morto   = false ;
 			var vinto   = false ;
+			var immune  = 0 ;
 			
 			var vite    = 3 ;
 
@@ -262,7 +263,7 @@
 
 					ctx.translate(pos[0]*50+25, pos[1]*50+25);
 					ctx.rotate(angolo*Math.PI/180);
-                                        ctx.fillStyle = "#EEFF41" ;
+                                        ctx.fillStyle = ( morto || (immune && immune % 25 > 13  ) ) ? "grey" : "#EEFF41" ;
                                         ctx.beginPath();
                                         ctx.arc(0,0,25, add+0.25*Math.PI-Math.PI/8, add+1.25 * Math.PI - Math.PI/8, false);
                                         ctx.fill();
@@ -335,7 +336,7 @@
                                                 ctx.fill();
                                         }
 				
-/*
+
 					// Wait player
 					if( !player )
 					{
@@ -373,7 +374,7 @@
 						ctx.fillText(point + " Points",width/2,height/2+60);	
                                                 return;
                                         }  
-*/
+
                                         // Vinto player
                                         if( vinto )
                                         {
@@ -416,7 +417,7 @@
 						if( livello[py][px] == 9 )
 						{
 							point += 10 ; 
-							if( point == 950 ) vinto = 1 ;
+							if( point == 950 ){ point == 1000; vinto = 1 ; }
 							livello[py][px] = 0 ;
 						}
 					}
@@ -462,7 +463,25 @@
 					mov++ ;
 	
 					// Collisione fantasmi - pacman
-					
+					if( !immune )
+					{
+						for(var i=0; i<fantasmi.length ; i++)
+						{
+							var fpos = fantasmi[i] ;
+							var dist = (pos[0]-fpos[0])*(pos[0]-fpos[0])+(pos[1]-fpos[1])*(pos[1]-fpos[1]);
+							if( dist <= 1 && Math.abs(pos[0]-fpos[0]) + Math.abs(pos[1]-fpos[1]) <= 1)
+							{
+								if( vite == 0 )
+								{
+									morto = true ;
+									return ;
+								}
+								vite-- ;
+								immune = 125 ;
+							}
+						}
+					}
+					else immune-- ;
 
 
 				},35);
