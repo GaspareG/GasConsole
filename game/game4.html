@@ -89,16 +89,24 @@
 								var deg = data[0].wheel.direction.deg;
 								if( Math.abs(deg) > 15 )
 									pos += Math.sin(deg*Math.PI/180)*4 ;
-							break ;
+							break ;*/
 							case "analog":
 								var analog = data[0].analog ;
 								if( analog.left.perc != 0 )
 								{
-									angle = analog.left.deg-90;
-                                                                        pos += Math.sin(angle*Math.PI/180)*analog.left.perc/25 ;
+									angle = analog.left.deg+180;
+									console.log(angle);
+									if( 225 <= angle && angle <= 315 )
+										ndir = [0,-1];
+									else if( 315 <= angle || angle <= 45  )
+                                                                                ndir = [1,0];
+                                                                        else if( 135 <= angle && angle <= 225 )
+                                                                                ndir = [-1,0];
+                                                                        else if( 45 <= angle && angle <= 135 )
+                                                                                ndir = [0,+1];
 								}
 							break ;
-						*/	case "classic":
+							case "classic":
 								var direction = data[0].classic.direction;
 //								if( frame%25 >= 5 && frame%25 <= 20 ) break ;
 
@@ -452,8 +460,9 @@
 						}
 					}
 					mov++ ;
-
-
+	
+					// Collisione fantasmi - pacman
+					
 
 
 				},35);
