@@ -27,6 +27,7 @@
 			var bSize   = [25,25] ;
 			var pos     = [1,8] ;
 			var frame   = 0 ;		
+			var mov     = 0 ;
 	
 			var fantasmi = [ [9,3], [9,4], [9,5] ];
 			var fcolor   = [ "#FF0100", "#35FDFF", "#FFCB30" ] ;
@@ -362,16 +363,18 @@
 					// Game!!				
 
 					// Muovo fantasmi
-		
 					for( var i = 0 ; i < fantasmi.length ; i++)
 					{
 						fantasmi[i][0] += dir[i][0]/30 ;
 						fantasmi[i][1] += dir[i][1]/30 ;
-						if( fantasmi[i][0] % 1 <= 0.05 &&
-				                    fantasmi[i][1] % 1 <= 0.05 )
+
+						//if( fantasmi[i][0] % 1 <= 0.03333 &&
+				                //    fantasmi[i][1] % 1 <= 0.03333 )
+						if( mov % 30 == 0 )
 						{
-							fantasmi[i][0] = parseInt( fantasmi[i][0] );
-							fantasmi[i][1] = parseInt( fantasmi[i][1] );
+							console.log("PASSO");
+							fantasmi[i][0] = Math.round( fantasmi[i][0] );
+							fantasmi[i][1] = Math.round( fantasmi[i][1] );
 							do {
 								var n = parseInt(Math.random()*4);
 								switch(n)
@@ -396,13 +399,17 @@
 								var px = parseInt(fantasmi[i][0] + dir[i][0]) ;
 								var py = parseInt(fantasmi[i][1] + dir[i][1]) ;
 								if( px < 0 || py < 0 || py >= livello.length || px >= livello[0].length )
+								{
 									continue ;
-								if( livello[py][px] == 9 || livello[py][px] == 0 ) break ;
-
+								}
+								if( livello[py][px] == 9 || livello[py][px] == 0 )
+								{
+									break ;
+								}
 							} while( true );
 						}
 					}
-
+					mov++ ;
 
 
 
