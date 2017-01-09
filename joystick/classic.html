@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
         <meta name="theme-color" content="#888" />
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+        <script src="https://use.fontawesome.com/9d9d9e8b67.js"></script> <!-- fontawesome icon!-->
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >
         <style>
 	    html { overflow: hidden ;}
@@ -183,6 +184,10 @@
 
        
 	      hr { border: 2.5px solid white ; margin: 0px ;}
+
+		#home { top: calc( 100% - 12vw ); }
+		#refresh { top: calc( 100% - 12vw ) ; }
+	
 	</style>
     </head>
 
@@ -210,9 +215,11 @@
 			</div>
 
 		</div>
-		<div id="center" class="panel"></div>
+		<div id="center" class="panel">
+                        <div class="col"><div class="button" id="home"><div class="buttonc fa fa-home"></div></div></div>
+                        <div class="col"><div class="button" id="refresh"><div class="buttonc fa fa-refresh"></div></div></div>
+		</div>
 		<div id="rg"  class="panel">
-
 			<div class="col"><div class="button" id="A"><div class="buttonc">A</div></div></div>
 			<div class="col"><div class="button" id="B"><div class="buttonc">B</div></div></div>
 		</div>
@@ -225,13 +232,13 @@
 	</div>
 	<script>
 
-                document.oncontextmenu = function(event) {
+/*                document.oncontextmenu = function(event) {
                         event.preventDefault();
                         event.stopPropagation(); // not necessary in my case, could leave in case stopImmediateProp isn't available?
                         event.stopImmediatePropagation();
                         return false;
                 };
-
+*/
 		var L,R,U,D;
 		var A,B;
 		var debug ;
@@ -269,6 +276,23 @@
                 wsServer.onmessage = function(event){
                         debug.innerHTML = event.data ;
                 };
+
+                document.getElementById("home").addEventListener("click",function(){
+			wsServer.send(JSON.stringify({ event: "press", value: "H" }));
+                });
+
+                document.getElementById("home").addEventListener("touchstart",function(){
+                        wsServer.send(JSON.stringify({ event: "press", value: "H" }));
+                });
+
+                document.getElementById("refresh").addEventListener("click",function(){
+                        wsServer.send(JSON.stringify({ event: "press", value: "R" }));
+                });
+
+                document.getElementById("refresh").addEventListener("touchstart",function(){
+                        wsServer.send(JSON.stringify({ event: "press", value: "R" }));
+                });
+
 
 
 		var oldCross = [false,false,false,false] ;
@@ -360,11 +384,13 @@
 				}
 
 				// TODO INVIO EVENTI AL SOCKET
-/*				if(!button2[0] && button[0])
-					console.log("A[click]");
-				if(!button2[1] && button[1])
-					console.log("B[click]");
-				if(!cross2[0] && cross[0])
+				if(!button2[0] && button[0])
+					wsServer.send(JSON.stringify({ event: "press", value: "A" }));
+					// console.log("A[click]");
+				if(!button2[1] && button[1])                                 
+					wsServer.send(JSON.stringify({ event: "press", value: "B" }));
+					//console.log("B[click]");
+			/*	if(!cross2[0] && cross[0])
 					console.log("LEFT[click]");
                                 if(!cross2[1] && cross[1])
                                         console.log("RIGHT[click]");

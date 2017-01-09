@@ -4,6 +4,7 @@
         
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
         <meta name="theme-color" content="#888" />
+        <script src="https://use.fontawesome.com/9d9d9e8b67.js"></script> <!-- fontawesome icon!-->
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >        
         <style>
             body {
@@ -158,6 +159,11 @@
                 top: 0%; 
                 border: 1px black solid; 
             }
+
+	    #home, #refresh { position: fixed ; width: 10%; padding-bottom: 10% ; right: 14.5% ; font-size: 20px ; }
+
+	    #home { top: 2% ; }
+	    #refresh { bottom: 7%; }
         </style>
     </head>
 
@@ -175,6 +181,9 @@
             <div id="velcover"></div>
             <div class="button" id="left"></div>
             <div class="button" id="right"></div>
+		
+	    <div class="button fa fa-home" id="home"></div>
+	    <div class="button fa fa-refresh" id="refresh"></div>
         </center>
 
         <script>
@@ -212,9 +221,25 @@
                      wsReady = true ;
              };
 
-             wsServer.onmessage = function(event){
-                       document.getElementById("debug").innerHTML = event.data ;
-             };
+	        wsServer.onmessage = function(event){
+        		document.getElementById("debug").innerHTML = event.data ;
+                };
+
+                document.getElementById("home").addEventListener("click",function(){
+			wsServer.send(JSON.stringify({ event: "press", value: "H" }));
+                });
+
+                document.getElementById("home").addEventListener("touchstart",function(){
+                        wsServer.send(JSON.stringify({ event: "press", value: "H" }));
+                });
+
+                document.getElementById("refresh").addEventListener("click",function(){
+                        wsServer.send(JSON.stringify({ event: "press", value: "R" }));
+                });
+
+                document.getElementById("refresh").addEventListener("touchstart",function(){
+                        wsServer.send(JSON.stringify({ event: "press", value: "R" }));
+                });
 
 	     	var buttonA = false ;
 	     	var buttonB = false ;
@@ -256,6 +281,8 @@
 			if( distA <= r*r ) hitA = true ;
 			if( distB <= r*r ) hitB = true ;
 		}
+		if( hitA && !buttonA ) wsServer.send(JSON.stringify({ event: "press", value: "A" }));
+		if( hitB && !buttonB ) wsServer.send(JSON.stringify({ event: "press", value: "B" }));
 		buttonA = hitA ;
 		buttonB = hitB ;		
 		 left.className = "button" + (hitA?" active": "");

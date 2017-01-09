@@ -4,6 +4,7 @@
         
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/> <!--320-->
         <meta name="theme-color" content="#888" />
+        <script src="https://use.fontawesome.com/9d9d9e8b67.js"></script> <!-- fontawesome icon!-->
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" >        
         <style>
@@ -75,6 +76,25 @@
 		max-width: 80vh ;
             }
 
+		#home, #refresh {
+			width: 10vw ;
+			height: 10vw ;
+			position: fixed ;
+			top: calc( 90% - 10vw ) !important ;
+			text-align: center ;
+			line-height: 10vw ;
+			vertical-align: middle ;
+			font-size: 6vw ;
+		}
+
+	   	#home {
+			left: 2% ;
+		}
+
+	  	#refresh {
+			right: 2% ;
+		}
+
 	    .analog div {
                 height: 50% ;
 		width:  50% ;
@@ -117,6 +137,10 @@
 
 	<div id="left" class="analog"><div id="la"></div></div>
 	<div id="right" class="analog"><div id="lb"></div></div>
+
+	<div id="home" class="analog fa fa-home"></div>
+	<div id="refresh" class="analog fa fa-refresh"></div>
+
 	<div id="landscape">
 		<div id="error">
 		Please rotate your phone!<br/><br/>
@@ -158,6 +182,22 @@
 		wsServer.onmessage = function(event){
 	                debug.innerHTML = event.data;
 		};
+
+                document.getElementById("home").addEventListener("click",function(){
+			wsServer.send(JSON.stringify({ event: "press", value: "H" }));
+                });
+
+                document.getElementById("home").addEventListener("touchstart",function(){
+                        wsServer.send(JSON.stringify({ event: "press", value: "H" }));
+                });
+
+                document.getElementById("refresh").addEventListener("click",function(){
+                        wsServer.send(JSON.stringify({ event: "press", value: "R" }));
+                });
+
+                document.getElementById("refresh").addEventListener("touchstart",function(){
+                        wsServer.send(JSON.stringify({ event: "press", value: "R" }));
+                });
 
 		document.addEventListener("DOMContentLoaded",function(){
 
