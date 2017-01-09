@@ -58,11 +58,18 @@
  				[5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6]
 			];
 
+                        var wsServer = null ;
+                        var wsRead = false ;
+                        function mandaMsg(numero, msg)
+                        {
+                                wsServer.send( JSON.stringify({ type: "news", to: numero, info: msg }) );
+                        }
+
 			document.addEventListener("DOMContentLoaded",function(){
 
 				// Connessione WebSocket
-                        	var wsServer = new WebSocket("ws://88.198.124.71:6060");
-                        	var wsReady = false ;
+                        	wsServer = new WebSocket("ws://88.198.124.71:6060");
+                        	wsReady = false ;
 
                         	wsServer.onopen = function(){
                                 	wsServer.send("SERVER");
@@ -72,6 +79,20 @@
 				// Parsing Input
 				wsServer.onmessage = function(event){
 					var data = JSON.parse(event.data);
+					
+					if( !Array.isArray(data) )
+                                        {
+                                                if( data.event == "press" &&
+                                                    (data.value == "A" || data.value == "B") ) spara();
+                                                else if(data.event == "press" && data.value == "R" )
+                                                        location.href = "game4.html" ;
+                                                else if(data.event == "press" && data.value == "H" )
+                                                        location.href = "home.html" ;
+						return ;
+                                        }
+
+
+
 					player  = false ;
 					offline = false ;
 					
@@ -415,8 +436,9 @@
 						var py = Math.round(pos[1])+pdir[1] ;
 						if( livello[py][px] == 9 )
 						{
+							mandaMsg(0,"Great! +10 points!");
 							point += 10 ; 
-							if( point == 950 ){ point == 1000; vinto = 1 ; }
+							if( point == 950 ){ point == 1000; mandaMsg(0,"You Win!!"); vinto = 1 ; }
 							livello[py][px] = 0 ;
 						}
 					}
@@ -472,9 +494,11 @@
 							{
 								if( vite == 0 )
 								{
+									mandaMsg(0, "Oh no! You died!");
 									morto = true ;
 									return ;
 								}
+								mandaMsg(0,"Oh no! Ghost catch you!");
 								vite-- ;
 								immune = 125 ;
 							}

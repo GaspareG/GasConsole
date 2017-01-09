@@ -34,11 +34,18 @@
 			var pallina = [width/2, height/2] ;
 			var vel     = [10,3.5] ;
 
+                        var wsServer = null ;
+                        var wsRead = false ;
+                        function mandaMsg(numero, msg)
+                        {
+                                wsServer.send( JSON.stringify({ type: "news", to: numero, info: msg }) );
+                        }
+
 			document.addEventListener("DOMContentLoaded",function(){
 
 				// Connessione WebSocket
-                        	var wsServer = new WebSocket("ws://88.198.124.71:6060");
-                        	var wsReady = false ;
+                        	wsServer = new WebSocket("ws://88.198.124.71:6060");
+                        	wsReady = false ;
 
                         	wsServer.onopen = function(){
                                 	wsServer.send("SERVER");
@@ -48,6 +55,20 @@
 				// Parsing Input
 				wsServer.onmessage = function(event){
 					var data = JSON.parse(event.data);
+
+
+					if( !Array.isArray(data) )
+                                        {
+                                                if( data.event == "press" &&
+                                                    (data.value == "A" || data.value == "B") ) spara();
+                                                else if(data.event == "press" && data.value == "R" )
+                                                        location.href = "game1.html" ;
+                                                else if(data.event == "press" && data.value == "H" )
+                                                        location.href = "home.html" ;
+						return ;
+                                        }
+
+
 					player  = [false,false] ;
 					offline = [false,false] ;
 
@@ -167,6 +188,8 @@
 							if( pallina[0]+15 >= width )
 							{
 								point[0]++;
+								mandaMsg(0,"Great! +1 Point!");
+								mandaMsg(1,"Oh no! "+(point[1]-point[0]) + " for you!");
 								pallina = [width/2,height/2] ;
 								vel[0] = -10 ;
 								vel[1] = (Math.random()*10)-5 ;
@@ -187,7 +210,9 @@
                                                 {
 							if( pallina[0]-15 <= 0 )
 							{
-								point[1]++ ;
+								point[1]++ ;       
+                                                                mandaMsg(1,"Great! +1 Point!");
+                                                                mandaMsg(0,"Oh no! "+(point[0]-point[1]) + " for you!");
 								vel[0] = 10 ;
 								vel[1] = (Math.random()*10)-5 ;
 								pallina = [width/2,height/2] ;

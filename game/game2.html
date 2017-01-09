@@ -76,12 +76,18 @@
 
 			
 			var color = ["#212121","#00796B", "#FFA000", "#FF4081","#90A4AE"] ;
+			var wsServer = null ;
+			var wsRead = false ;
+			function mandaMsg(numero, msg)
+			{
+				wsServer.send( JSON.stringify({ type: "news", to: numero, info: msg }) );
+			}
 
 			document.addEventListener("DOMContentLoaded",function(){
 
 				// Connessione WebSocket
-                        	var wsServer = new WebSocket("ws://88.198.124.71:6060");
-                        	var wsReady = false ;
+                        	wsServer = new WebSocket("ws://88.198.124.71:6060");
+                        	wsReady = false ;
 
                         	wsServer.onopen = function(){
                                 	wsServer.send("SERVER");
@@ -91,6 +97,19 @@
 				// Parsing Input
 				wsServer.onmessage = function(event){
 					var data = JSON.parse(event.data);
+
+					if( !Array.isArray(data) )
+                                        {
+                                                if( data.event == "press" &&
+                                                    (data.value == "A" || data.value == "B") ) spara();
+                                                else if(data.event == "press" && data.value == "R" )
+                                                        location.href = "game2.html" ;
+                                                else if(data.event == "press" && data.value == "H" )
+                                                        location.href = "home.html" ;
+						return ;
+                                        }
+
+
 					player  = false ;
 					offline = false ;
 					
@@ -273,8 +292,16 @@
 						var diff = pallina[0]-(width-curSize[0])*(pos/100);
 						if( diff < 0 || diff > curSize[0] )
 						{
-							if( vite == 0 ) morto = true ;
-							else vite-- ;
+							if( vite == 0 )
+							{
+								morto = true ;
+								mandaMsg(0,"Oh no! You died!");
+							}
+							else 
+							{
+								vite-- ;
+								mandaMsg(0,"Ouch! You lose a life!");
+							}
 							pos = 50 ;
                         				pallina = [width/2, height/2.25] ;
 							vel = [ Math.random()*10-5,10] ;
@@ -300,6 +327,7 @@
 							if( dx >= -15 && dx <= tw-4+15 && dy >= -15 && dy <= th-4+15 )
 							{
 								point += tiles[i][j]*10 ;
+		                                                mandaMsg(0,"+"+(tiles[i][j]*10)+" points!");
 								tiles[i][j]-- ;
 								pallina[0] -= vel[0]/2 ;
 								pallina[1] -= vel[1]/2 ;
@@ -315,9 +343,11 @@
 						++level ;
 						if( level == levels.length )
 						{
+							mandaMsg(0,"Great! You Win!!");
 							vinto = true ;
 							return ;
 						}
+						mandaMsg(0,"Great! Level Up!");
 						tiles = levels[level] ;
                         			pallina = [width/2, height/2.25] ;
                        				vel     = [4.5,10] ;

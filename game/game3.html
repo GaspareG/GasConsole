@@ -53,6 +53,14 @@
                                 asteroids.push(nuovo);
                         }*/
 
+                        var wsServer = null ;
+                        var wsRead = false ;
+                        function mandaMsg(numero, msg)
+                        {
+                                wsServer.send( JSON.stringify({ type: "news", to: numero, info: msg }) );
+                        }
+
+
 			function addAsteroids(aRad,aPos)
 			{
 				var nuovo = { center: aPos, points: [], radius: aRad, vel:[] };
@@ -113,22 +121,25 @@
 			addAsteroids(30,[500,100]);
 			addAsteroids(30,[500,400]);
 
+			var lastSparo = 0 ;
 			function spara(){
-				if( player && !offline && !morto )		
+				if( player && !offline && !morto )
+				if( (new Date()).getTime() - lastSparo <= 300 ) return ;		
 				spari.push({
 					angolo: angle-90 ,
 					posizione: [position[0],position[1]],
 					vel: 10 				
 				});
+				lastSparo = (new Date()).getTime();
 			}
 	
-			setInterval(spara,300);
+	//		setInterval(spara,300);
 
 			document.addEventListener("DOMContentLoaded",function(){
 
 				// Connessione WebSocket
-                        	var wsServer = new WebSocket("ws://88.198.124.71:6060");
-                        	var wsReady = false ;
+                        	wsServer = new WebSocket("ws://88.198.124.71:6060");
+                        	wsReady = false ;
 
                         	wsServer.onopen = function(){
                                 	wsServer.send("SERVER");
@@ -138,10 +149,17 @@
 				// Parsing Input
 				wsServer.onmessage = function(event){
 					var data = JSON.parse(event.data);
-					player  = false ;
-					offline = false ;
-					
-					if( data.length >= 1 )
+					if( !Array.isArray(data) )
+					{
+						if( data.event == "press" &&
+						    (data.value == "A" || data.value == "B") ) spara();
+						else if(data.event == "press" && data.value == "R" )
+							location.href = "game3.html" ;
+						else if(data.event == "press" && data.value == "H" )
+							location.href = "home.html" ;
+						return ;
+					}
+					else if( data.length >= 1 )
 					{
 						player = true ;
 						if(data[0].offline)
@@ -155,16 +173,19 @@
 							case "wheel":
 								var deg = data[0].wheel.direction.deg;
 								var vel = data[0].wheel.direction.vel;
+
+								var button = data[0].wheel.button ;
+								if( button.A || button.B ) spara();
 								if( deg <= -15 || deg >= 15 )
 								{
-									angle += deg/10 ;
+									angle += deg/20 ;
 									console.log(deg, Math.sin(deg*Math.PI/180)*vel );
 								}
 				
 								if( vel >= 45 )
 								{
-									position[0] += Math.sin(angle*Math.PI/180)*vel/10 ;
-									position[1] -= Math.cos(angle*Math.PI/180)*vel/10 ;
+									position[0] += Math.sin(angle*Math.PI/180)*vel/15 ;
+									position[1] -= Math.cos(angle*Math.PI/180)*vel/15 ;
 								}
 							break ;
 							case "analog":
@@ -175,6 +196,7 @@
                                                                         position[0] += Math.sin(angle*Math.PI/180)*analog.left.perc/15 ;
                                                                         position[1] -= Math.cos(angle*Math.PI/180)*analog.left.perc/15 ;
 								}
+								if( analog.right.perc != 0 ) spara();
 							break ;
 							case "classic":
 								var direction = data[0].classic.direction;
@@ -192,6 +214,8 @@
                                                                         position[1] += 7 ;
 									angle = 180 ;
                                                                 }
+								var button = data[0].classic.button ;
+								if( button.A || button.B ) spara();
 
 
 							break;
@@ -209,6 +233,7 @@
 
 				
 					}									
+					else { player = 0 ; offline = false ; }
 				};
 				
 				// Refresh Gioco
@@ -345,6 +370,7 @@
 						var distsQ = (centerA[0]-centerB[0])*(centerA[0]-centerB[0])+ (centerA[1]-centerB[1])*(centerA[1]-centerB[1]);
 						if( distsQ <= radiusA*radiusA+radiusB*radiusB)
 						{
+							mandaMsg(0,"Oh no! you died!");
 							morto = true ;
 							return ;
 						}
@@ -368,6 +394,7 @@
         	                                        if( distsQ <= radiusA*radiusA+radiusB*radiusB )
 							{
 								point += asteroids[i].radius ;
+								mandaMsg(0,"Great! "+asteroids[i].radius+ " points!");
 								if( radiusA > 15 )
 								{
 						                        addAsteroids(radiusA/2,[centerA[0],centerA[1]]);
