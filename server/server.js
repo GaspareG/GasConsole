@@ -88,12 +88,27 @@ wss.on('connection', function connection(ws) {
 		{	
 			if(type[id]==1)
 			{
+				var dt = JSON.parse(data);
+				if( dt.event )
+				{
+					dt.client = clientId[id] ;
+					console.log(dt);
+					sendAllServer(dt);
+					return ;
+				}
 				inputData[clientId[id]] = JSON.parse(data);
 				inputData[clientId[id]].offline = false ;
 			}
 			else
 			{
-				
+				var msg = JSON.parse(data);
+				if( msg.type && msg.type == "news" )
+				{
+					var to = parseInt(msg.to);
+					var info = msg.info ;
+					if( to >= 0 && to < clientWs.length )
+						clientWs[to].send(info);
+				}
 			}
 		}
 	}
