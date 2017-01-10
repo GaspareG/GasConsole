@@ -97,13 +97,19 @@
 				}
 			}
 
+                        var wsServer = null ;
+                        var wsRead = false ;
+                        function mandaMsg(numero, msg)
+                        {
+                                wsServer.send( JSON.stringify({ type: "news", to: numero, info: msg }) );
+                        }
 
 		
 			document.addEventListener("DOMContentLoaded",function(){
 
 				// Connessione WebSocket
-                        	var wsServer = new WebSocket("ws://88.198.124.71:6060");
-                        	var wsReady = false ;
+                        	wsServer = new WebSocket("ws://88.198.124.71:6060");
+                        	wsReady = false ;
 
                         	wsServer.onopen = function(){
                                 	wsServer.send("SERVER");
@@ -143,7 +149,14 @@
 							trasla(-( direction.deg )/50,0,0);
 							
 						}
-
+						else if( data[0].controller == "analog" )
+						{
+							var left  = data[0].analog.left ;
+							var right = data[0].analog.right ;
+							if( left.perc > 0 )
+								trasla( ( Math.cos(Math.PI/180* Math.abs(left.deg) ) )  ,0,0 );
+								velz = right.perc / 100 ;
+						}
 						velz = Math.max(0.2,velz);
 						velz = Math.min(1,velz);
 					}		
@@ -208,12 +221,14 @@
                                 	                }
 							if( minX <= halfWidth && halfWidth <= maxX ) 
 							{
+								mandaMsg(0,"Great! +"+asteroids[i].punti+" points!");
 								point += asteroids[i].punti;
 								mancati = 0 ;
 							}
 							else {
 								mancati++ ;
 								if( mancati == 6 ){
+									mandaMsg(0,"Oh no! You died!");
 									morto = true ;
 								}
 							}
