@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Game6</title>
+		<title>Game4</title>
 		<style>
 			body {
 				margin: 0px ;
@@ -24,11 +24,52 @@
 			var width    = 1000 ;
 			var height   = 500 ;
 
+			var bSize   = [25,25] ;
+			var pos     = [1,8] ;
+			var pdir    = [0,0] ;
+			var ndir    = [0,0] ;
+
+			var frame   = 0 ;		
+			var mov     = 0 ;
+	
+			var fantasmi = [ [9,1], [9,8], [11,1], [11,8] ];
+			var fcolor   = [ "#FF0100", "#35FDFF", "#FFCB30", "#FFB5DE"] ;
+			var dir      = [ [-1,0], [-1,0], [0,1], [0,1] ] ;
+
+			var player  = false ;
+			var offline = false ;
+			var point   = 0 ;
+			var morto   = false ;
+			var vinto   = false ;
+			var immune  = 0 ;
+			
+			var vite    = 3 ;
+
+			var livello = [
+				[3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4],
+				[2, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 2],
+				[2, 9, 3, 8, 9, 7, 4, 9, 3, 8, 9, 7, 4, 9,10, 9, 7, 4, 9, 2],
+				[2, 9, 2, 9, 9, 9, 2, 9, 2, 9, 9, 9, 2, 9, 2, 9, 9,11, 9, 2],
+				[2, 9,11, 9,10, 9,11, 9, 2, 9,10, 9, 2, 9, 5, 8, 9, 9, 9, 2],
+				[2, 9, 9, 9,11, 9, 9, 9, 2, 9,11, 9, 2, 9, 9, 9, 9,10, 9, 2],
+ 				[2, 9,10, 9, 9, 9,10, 9, 2, 9, 9, 9, 2, 9, 3, 4, 9, 2, 9, 2],
+ 				[2, 9, 5, 8, 9, 7, 6, 9, 5, 8, 9, 7, 6, 9, 5, 6, 9,11, 9, 2],
+ 				[2, 0, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 2],
+ 				[5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6]
+			];
+
+                        var wsServer = null ;
+                        var wsRead = false ;
+                        function mandaMsg(numero, msg)
+                        {
+                                wsServer.send( JSON.stringify({ type: "news", to: numero, info: msg }) );
+                        }
+
 			document.addEventListener("DOMContentLoaded",function(){
 
 				// Connessione WebSocket
-                        	var wsServer = new WebSocket("ws://88.198.124.71:6060");
-                        	var wsReady = false ;
+                        	wsServer = new WebSocket("ws://88.198.124.71:6060");
+                        	wsReady = false ;
 
                         	wsServer.onopen = function(){
                                 	wsServer.send("SERVER");
@@ -38,15 +79,432 @@
 				// Parsing Input
 				wsServer.onmessage = function(event){
 					var data = JSON.parse(event.data);
-									
+					
+					if( !Array.isArray(data) )
+                                        {
+                                                if( data.event == "press" &&
+                                                    (data.value == "A" || data.value == "B") ) spara();
+                                                else if(data.event == "press" && data.value == "R" )
+                                                        location.href = "game4.html" ;
+                                                else if(data.event == "press" && data.value == "H" )
+                                                        location.href = "home.html" ;
+						return ;
+                                        }
+
+
+
+					player  = false ;
+					offline = false ;
+					
+					if( data.length >= 1 )
+					{
+						player = true ;
+						if(data[0].offline)
+						{
+							offline = true ;
+							return ;	
+						}
+						if( morto ) return ;
+						switch(data[0].controller)
+						{
+						/*	case "wheel":
+								var deg = data[0].wheel.direction.deg;
+								if( Math.abs(deg) > 15 )
+									pos += Math.sin(deg*Math.PI/180)*4 ;
+							break ;*/
+							case "analog":
+								var analog = data[0].analog ;
+								if( analog.left.perc != 0 )
+								{
+									angle = analog.left.deg+180;
+									if( 225 <= angle && angle <= 315 )
+										ndir = [0,-1];
+									else if( 315 <= angle || angle <= 45  )
+                                                                                ndir = [1,0];
+                                                                        else if( 135 <= angle && angle <= 225 )
+                                                                                ndir = [-1,0];
+                                                                        else if( 45 <= angle && angle <= 135 )
+                                                                                ndir = [0,+1];
+								}
+							break ;
+							case "classic":
+								var direction = data[0].classic.direction;
+//								if( frame%25 >= 5 && frame%25 <= 20 ) break ;
+
+								if( direction.left ){
+									ndir = [-1,0];
+								} else if( direction.right ){
+									ndir = [1,0] ;
+								} else if( direction.top ){
+									ndir = [0,-1] ;
+								} else if( direction.down ){
+									ndir = [0,1] ;
+								}
+
+							break;
+						}
+                                               
+						/*pos = Math.min(100,Math.max(0,pos));*/
+					}									
 				};
 				
 				// Refresh Gioco
 				var update = setInterval(function(){
 
 					// Pulisco 
-					ctx.fillStyle = "black";
+					ctx.fillStyle = "#000";
  					ctx.fillRect(0,0,width,height);
+
+					// Stili 
+					ctx.fillStyle = "white" ;
+					ctx.strokeStyle = "white" ;
+					ctx.lineWidth = 3 ;
+
+					// Livello
+					for(var i=0; i<livello.length; i++)
+					{
+						var tw = width/livello[i].length ;
+						var th = height/livello.length ;
+						for(var j=0; j<livello[i].length; j++)
+						{
+							if( !livello[i][j] ) continue ;
+							var x = tw*j+tw/2 ;
+							var y = th*i+th/2 ;
+							switch( livello[i][j] )
+							{
+								case 1:
+									ctx.fillStyle = "#1E88E5" ;
+									ctx.fillRect(x-tw/2, y-th/4, tw, th/2);
+								break;
+								case 2:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x-tw/4, y-th/2, tw/2, th);
+								break ;					
+                                                                case 3:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x-tw/4, y, tw/2, th/2);
+                                                                        ctx.fillRect(x, y-th/4, tw/2, th/2);
+                                                                        ctx.beginPath();
+                                                                        ctx.arc(x,y, tw/4, 0, Math.PI*2);
+                                                                        ctx.fill();
+                                                                break ;         		
+                                                                case 4:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x-tw/4, y, tw/2, th/2);
+                                                                        ctx.fillRect(x-tw/2, y-th/4, tw/2, th/2);
+                                                                        ctx.beginPath();
+                                                                        ctx.arc(x,y, tw/4, 0, Math.PI*2);
+                                                                        ctx.fill();
+                                                                break ;
+                                                                case 5:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x-tw/4, y-th/2, tw/2, th/2);
+                                                                        ctx.fillRect(x, y-th/4, tw/2, th/2);
+									ctx.beginPath();
+									ctx.arc(x,y, tw/4, 0, Math.PI*2);
+									ctx.fill();
+                                                                break ;
+                                                                case 6:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x-tw/4, y-th/2, tw/2, th/2);
+                                                                        ctx.fillRect(x-tw/2, y-th/4, tw/2, th/2);
+                                                                        ctx.beginPath();
+                                                                        ctx.arc(x,y, tw/4, 0, Math.PI*2);
+                                                                        ctx.fill();
+                                                                break ;		
+                                                                case 7:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x, y-th/4, tw/2, th/2);
+                                                                        ctx.beginPath();
+                                                                        ctx.arc(x,y, tw/4, 0, Math.PI*2);
+                                                                        ctx.fill();
+                                                                break ;         
+                                                                case 8:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x-tw/2, y-th/4, tw/2, th/2);
+                                                                        ctx.beginPath();
+                                                                        ctx.arc(x,y, tw/4, 0, Math.PI*2);
+                                                                        ctx.fill();
+                                                                break ;         
+
+                                                                case 10:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x-tw/4, y, tw/2, th/2);
+                                                                        ctx.beginPath();
+                                                                        ctx.arc(x,y, tw/4, 0, Math.PI*2);
+                                                                        ctx.fill();
+                                                                break ;         
+                                                                case 11:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x-tw/4, y-th/2, tw/2, th/2);
+                                                                        ctx.beginPath();
+                                                                        ctx.arc(x,y, tw/4, 0, Math.PI*2);
+                                                                        ctx.fill();
+                                                                break ;        
+                                                                case 12:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.beginPath();
+                                                                        ctx.arc(x,y, tw/4, 0, Math.PI*2);
+                                                                        ctx.fill();
+                                                                break ;         
+                                                                case 13:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+                                                                        ctx.fillRect(x-tw  , y-th/4, tw, th/2);
+									ctx.fillRect(x-tw/4, y-th/2, tw/2, th);
+                                                                break ;
+                                                                case 14:
+                                                                        ctx.fillStyle = "#1E88E5" ;
+									ctx.fillRect(x-tw/4, y     , tw/2, th);
+                                                                        ctx.fillRect(x-tw/2, y-th/4, tw, th/2);
+                                                                break;
+								case 9:
+									ctx.fillStyle = "#FFF9C4" ;
+									ctx.beginPath();
+									ctx.arc(tw*j+tw/2, th*i+th/2, tw/10, 0, Math.PI*2);
+									ctx.fill();
+								break ;
+							}
+						}						
+					}
+
+                                        // Cursore Giocatore
+                                        frame++ ;
+                                        var add = 0.5-Math.abs(Math.sin(frame/25*Math.PI))/2 ;
+					ctx.save();
+					var angolo = 0 ;
+					if( pdir[0] == 0 && pdir[1] == 1 )
+						angolo = 90 ;
+					else if( pdir[0] == 0 && pdir[1] == -1 )
+						angolo = 270 ;
+					else if( pdir[0] == 1 && pdir[1] == 0 )
+						angolo = 0 ;
+					else if( pdir[0] == -1 && pdir[1] == 0 )
+						angolo = 180 ;
+
+					ctx.translate(pos[0]*50+25, pos[1]*50+25);
+					ctx.rotate(angolo*Math.PI/180);
+                                        ctx.fillStyle = ( morto || (immune && immune % 25 > 13  ) ) ? "grey" : "#EEFF41" ;
+                                        ctx.beginPath();
+                                        ctx.arc(0,0,25, add+0.25*Math.PI-Math.PI/8, add+1.25 * Math.PI - Math.PI/8, false);
+                                        ctx.fill();
+                                        ctx.beginPath();
+                                        ctx.arc(0,0,25, 0.75 * Math.PI -add + Math.PI/8, 1.75 * Math.PI -add + Math.PI/8, false);
+                                        ctx.fill();
+
+					ctx.restore();
+
+					// Fantasmi 
+					for(var i=0; i<fantasmi.length; i++)
+					{
+						var pfast = fantasmi[i] ;
+						var dx = pfast[0]*50+25 ;
+						var dy = pfast[1]*50+25 ;
+						ctx.fillStyle = vinto ? "grey" : fcolor[i] ;
+						ctx.beginPath();
+						ctx.moveTo( dx - 20, dy + 20 );
+						ctx.lineTo( dx - 10, dy + 15 );
+						ctx.lineTo( dx     , dy + 20 );
+						ctx.lineTo( dx + 10, dy + 15 );
+						ctx.lineTo( dx + 20, dy + 20 );
+						ctx.lineTo( dx + 20, dy - 10 );
+						ctx.lineTo( dx - 20, dy - 10 );
+						ctx.fill();
+						ctx.beginPath();
+						ctx.arc   ( dx, dy - 10, 20, 0, Math.PI*2 );
+						ctx.fill();
+						ctx.fillStyle = "white" ;
+						ctx.beginPath();
+						ctx.arc   ( dx-10, dy - 10, 5, 0, Math.PI*2);
+						ctx.fill();
+                                                ctx.beginPath();
+                                                ctx.arc   ( dx+10, dy - 10, 5, 0, Math.PI*2);
+                                                ctx.fill();
+
+                                                ctx.fillStyle = "#011AFF" ;
+                                                ctx.beginPath();
+                                                ctx.arc   ( dx-10, dy - 10, 2, 0, Math.PI*2);
+                                                ctx.fill();
+                                                ctx.beginPath();
+                                                ctx.arc   ( dx+10, dy - 10, 2, 0, Math.PI*2);
+                                                ctx.fill();
+
+					}
+
+                                        // Punti
+                                        ctx.font = "50px Arial" ;
+					ctx.fillStyle = "white" ;
+                                        ctx.textAlign = "right" ;
+                                        ctx.fillText(point, width-10,50);
+
+                                        // Vite
+                                        ctx.fillStyle = "#D50000" ;
+
+                                        for(var i=0; i<vite ; i++)
+                                        {
+                                                var x = 35+i*35;
+                                                var y = 10 ;
+                                                ctx.beginPath();
+                                                ctx.moveTo(x+20,y+30);
+                                                ctx.lineTo(x+32,y+10);
+                                                ctx.lineTo(x+8,y+10);
+                                                ctx.fill();     
+                                                ctx.beginPath();
+                                                ctx.arc(x+14,y+10,6,Math.PI,2*Math.PI);
+                                                ctx.fill();
+                                                ctx.beginPath();
+                                                ctx.arc(x+26,y+10,6,Math.PI,2*Math.PI);
+                                                ctx.fill();
+                                        }
+				
+
+					// Wait player
+					if( !player )
+					{
+						ctx.fillStyle = "rgba(0,0,0,0.5)";
+						ctx.fillRect(0,0,width,height);
+		                                ctx.font = "50px Arial" ;
+	                                        ctx.textAlign = "center" ;
+						ctx.fillStyle = "white" ;
+        	                                ctx.fillText("Waiting for Player!", width/2,height/2);
+						return;
+					} 
+					
+					// Offline player
+					if( offline )
+					{
+                                                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                                                ctx.fillRect(0,0,width,height);
+                                                ctx.font = "50px Arial" ;
+                                                ctx.textAlign = "center" ;
+                                                ctx.fillStyle = "white" ;
+                                                ctx.fillText("Player offline!", width/2,height/2);
+                                                return;
+					}	
+
+                                        // Morto player
+                                        if( morto )
+                                        {
+                                                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                                                ctx.fillRect(0,0,width,height);
+                                                ctx.font = "50px Arial" ;
+                                                ctx.textAlign = "center" ;
+                                                ctx.fillStyle = "white" ;
+                                                ctx.fillText("You are dead!", width/2,height/2);
+						ctx.font = "40px Arial" ;
+						ctx.fillText(point + " Points",width/2,height/2+60);	
+                                                return;
+                                        }  
+
+                                        // Vinto player
+                                        if( vinto )
+                                        {
+                                                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                                                ctx.fillRect(0,0,width,height);
+                                                ctx.font = "50px Arial" ;
+                                                ctx.textAlign = "center" ;
+                                                ctx.fillStyle = "white" ;
+                                                ctx.fillText("You Win!", width/2,height/2);
+                                                ctx.font = "40px Arial" ;
+                                                ctx.fillText(point + " Points",width/2,height/2+60);    
+                                                return;
+                                        }  
+
+					// Game!!				
+
+					// Muovo il player 
+					pos[0] += pdir[0]/15 ;
+					pos[1] += pdir[1]/15 ;
+					if( mov % 15 == 0 )
+					{
+						pos[0] = Math.round(pos[0]);
+						pos[1] = Math.round(pos[1]);
+
+						if( ndir[0] == 0 && ndir[1] == 0 ){}
+						else
+						{
+							pdir = [ndir[0],ndir[1]] ;
+							ndir = [0,0] ;
+						}
+						var nx = pos[0] + pdir[0] ;
+						var ny = pos[1] + pdir[1] ;
+						if( livello[ny][nx] != 9 && livello[ny][nx] != 0 ) pdir = [0,0] ;
+					}
+					// Mangio il punto
+					else if( mov % 15 == 6 )
+					{
+						var px = Math.round(pos[0])+pdir[0] ;
+						var py = Math.round(pos[1])+pdir[1] ;
+						if( livello[py][px] == 9 )
+						{
+							mandaMsg(0,"Great! +10 points!");
+							point += 10 ; 
+							if( point == 950 ){ point == 1000; mandaMsg(0,"You Win!!"); vinto = 1 ; }
+							livello[py][px] = 0 ;
+						}
+					}
+
+					// Muovo fantasmi
+					for( var i = 0 ; i < fantasmi.length ; i++)
+					{
+
+						fantasmi[i][0] += dir[i][0]/15 ;
+						fantasmi[i][1] += dir[i][1]/15 ;
+
+						if( mov % 15 == 0 )
+						{
+							fantasmi[i][0] = Math.round( fantasmi[i][0] );
+							fantasmi[i][1] = Math.round( fantasmi[i][1] );
+
+							var pd  = [[+1,0],[-1,0],[0,+1],[0,-1]];
+							var px = fantasmi[i][0] ;
+							var py = fantasmi[i][1] ;
+							var ok = [] ;
+
+							for(var j=0; j < pd.length ; j++ )
+							{
+								var nx = px+pd[j][0] ;
+								var ny = py+pd[j][1] ;
+								if( nx <= 0 || ny <= 0 || nx >= livello[0].length || ny >= livello.length )
+									continue ;
+								if( livello[ny][nx] != 9 && livello[ny][nx] != 0 )
+									continue ;
+								ok.push(pd[j]); 
+							}
+							var ok2 = [] ;
+							for(var j=0; j<ok.length; j++)
+							{
+								if( dir[i][1] && dir[i][1] == -ok[j][1] ) continue ;
+								if( dir[i][0] && dir[i][0] == -ok[j][0] ) continue ;
+								ok2.push(ok[j]);
+							}
+							dir[i] = ok2[ parseInt(ok2.length*Math.random()) ] ;
+
+						}
+					}
+					mov++ ;
+	
+					// Collisione fantasmi - pacman
+					if( !immune )
+					{
+						for(var i=0; i<fantasmi.length ; i++)
+						{
+							var fpos = fantasmi[i] ;
+							var dist = (pos[0]-fpos[0])*(pos[0]-fpos[0])+(pos[1]-fpos[1])*(pos[1]-fpos[1]);
+							if( dist <= 1 && Math.abs(pos[0]-fpos[0]) + Math.abs(pos[1]-fpos[1]) <= 1)
+							{
+								if( vite == 0 )
+								{
+									mandaMsg(0, "Oh no! You died!");
+									morto = true ;
+									return ;
+								}
+								mandaMsg(0,"Oh no! Ghost catch you!");
+								vite-- ;
+								immune = 125 ;
+							}
+						}
+					}
+					else immune-- ;
 
 
 				},35);

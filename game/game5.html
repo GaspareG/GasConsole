@@ -56,10 +56,17 @@
 			function addAsteroide(rad,pos)		
 			{
 				var nuovo = [] ;
-				nuovo.push( [pos[0]+rad,pos[1],pos[2]] );
-                                nuovo.push( [pos[0],pos[1]-rad,pos[2]] );
-                                nuovo.push( [pos[0]-rad,pos[1],pos[2]] );
-				nuovo.push( [pos[0],pos[1]+rad,pos[2]] );
+				var lati = 8 ;
+
+				for(var i=0; i<lati ; i++)
+				{
+					nuovo.push( [pos[0]+rad*Math.cos(2*Math.PI/lati*i),
+					 	     pos[1]+rad*Math.sin(2*Math.PI/lati*i), pos[2]]);
+				}				
+				//nuovo.push( [pos[0]+rad,pos[1],pos[2]] );
+                                //nuovo.push( [pos[0],pos[1]-rad,pos[2]] );
+                                //nuovo.push( [pos[0]-rad,pos[1],pos[2]] );
+				//nuovo.push( [pos[0],pos[1]+rad,pos[2]] );
 				return nuovo ;
 			}
 			
@@ -160,7 +167,9 @@
 								break ;	
 							}
 						if(neg)
-							asteroids[i] = addAsteroide(15, [randomRange(-cc*2,cc*2),randomRange(-cc,cc),maxd]);
+						{
+							asteroids[i] = addAsteroide(15, [randomRange(-cc*2,cc*2),0,maxd]);
+						}
 					}
 
 					for(var i=0; i<asteroids.length; i++)
@@ -181,9 +190,7 @@
 					trasla(0,0,-velz);					
 				},35);
 		
-				asteroids.push(addAsteroide(20,[0,0,maxd]));
-				asteroids.push(addAsteroide(20,[50,0,maxd]));
-				asteroids.push(addAsteroide(20,[-50,0,maxd]));
+				asteroids.push(addAsteroide(20,[0,0,2*maxd]));
 			});				
 
 
