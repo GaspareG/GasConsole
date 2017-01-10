@@ -26,6 +26,12 @@
 
 			var maxd = 32;
 			var stars = [] ;
+			var point = 0 ;
+			var ast = 0 ;
+			var mancati = 0 ;
+			var morto = false ;
+			var player = false ;
+			var offline = false ;
 
 			function randomRange(minVal,maxVal) {
       				return Math.floor(Math.random() * (maxVal - minVal - 1)) + minVal;
@@ -56,17 +62,14 @@
 			function addAsteroide(rad,pos)		
 			{
 				var nuovo = [] ;
-				var lati = 8 ;
+				var lati = 5 + parseInt(6*Math.random()); ;
 
 				for(var i=0; i<lati ; i++)
 				{
 					nuovo.push( [pos[0]+rad*Math.cos(2*Math.PI/lati*i),
 					 	     pos[1]+rad*Math.sin(2*Math.PI/lati*i), pos[2]]);
 				}				
-				//nuovo.push( [pos[0]+rad,pos[1],pos[2]] );
-                                //nuovo.push( [pos[0],pos[1]-rad,pos[2]] );
-                                //nuovo.push( [pos[0]-rad,pos[1],pos[2]] );
-				//nuovo.push( [pos[0],pos[1]+rad,pos[2]] );
+				nuovo.punti = parseInt ( 50*(1-(rad/20)) )+20;
 				return nuovo ;
 			}
 			
@@ -110,15 +113,39 @@
 				// Parsing Input
 				wsServer.onmessage = function(event){
 					var data = JSON.parse(event.data);
+
+                                        if( !Array.isArray(data) )
+                                        {
+                                                if( data.event == "press" &&
+                                                    (data.value == "A" || data.value == "B") ) spara();
+                                                else if(data.event == "press" && data.value == "R" )
+                                                        location.href = "game5.html" ;
+                                                else if(data.event == "press" && data.value == "H" )
+                                                        location.href = "home.html" ;
+                                                return ;
+                                        }
+
+					player = false ;
+					offline = false ;
 					if( data.length >= 1 )
 					{
+						player = true ;
+						if( data[0].offline )
+						{
+							offline = true ;
+							return ;
+						}
+						if( morto ) return ;
 						if( data[0].controller == "wheel" )
 						{
 							var direction = data[0].wheel.direction ;
-							velz = direction.vel / 200 ;
+							velz = direction.vel / 100 ;
 							trasla(-( direction.deg )/50,0,0);
 							
 						}
+
+						velz = Math.max(0.2,velz);
+						velz = Math.min(1,velz);
 					}		
 				};
 				
@@ -168,18 +195,53 @@
 							}
 						if(neg)
 						{
-							asteroids[i] = addAsteroide(15, [randomRange(-cc*2,cc*2),0,maxd]);
+	                                               var maxX = maxY = -1000 ;
+        	                                        var minX = minY =  1000 ;
+							var proiettati = [] ;
+                	                                for(var j=0; j<asteroids[i].length; j++)
+                        	                        {
+                                                        	proiettati.push( proietta(asteroids[i][j][0], asteroids[i][j][1],  asteroids[i][j][2]) );
+                                                        	maxX = Math.max(proiettati[j][0],maxX);
+                                                        	maxY = Math.max(proiettati[j][1],maxY);
+                                                        	minX = Math.min(proiettati[j][0],minX);
+                                                        	minY = Math.min(proiettati[j][1],minY);
+                                	                }
+							if( minX <= halfWidth && halfWidth <= maxX ) 
+							{
+								point += asteroids[i].punti;
+								mancati = 0 ;
+							}
+							else {
+								mancati++ ;
+								if( mancati == 6 ){
+									morto = true ;
+								}
+							}
+                                                    
+							asteroids[i] = addAsteroide( 5 + 15*Math.random(), 
+								[ 100*((++ast)%3) - 100 + ((Math.random()*60-30)) ,0,maxd]);
 						}
 					}
 
 					for(var i=0; i<asteroids.length; i++)
 					{
 						var proiettati = [] ;
+						var maxX = maxY = -1000 ;
+						var minX = minY =  1000 ;
 						for(var j=0; j<asteroids[i].length; j++)
+						{
 							proiettati.push( proietta(asteroids[i][j][0], asteroids[i][j][1],  asteroids[i][j][2]) );
+							maxX = Math.max(proiettati[j][0],maxX);
+                                                        maxY = Math.max(proiettati[j][1],maxY);
+                                                        minX = Math.min(proiettati[j][0],minX);
+                                                        minY = Math.min(proiettati[j][1],minY);
 
+						}
 						ctx.beginPath();
-						ctx.strokeStyle = "white" ;
+						var k = parseInt(255*(1- asteroids[i][0][2]/32));
+						ctx.strokeStyle = "rgb("+k+","+k+","+k+")";
+						if( minX <= halfWidth && halfWidth <= maxX )
+							ctx.strokeStyle = "red" ;
 						ctx.moveTo(proiettati[0][0],proiettati[0][1]);
 						for(var j=1; j<proiettati.length; j++)
 							ctx.lineTo(proiettati[j][0], proiettati[j][1]);
@@ -187,10 +249,56 @@
 						ctx.stroke();
 					}
 
-					trasla(0,0,-velz);					
+                                        // Wait player
+                                        if( !player )
+                                        {
+                                                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                                                ctx.fillRect(0,0,width,height);
+                                                ctx.font = "50px Arial" ;
+                                                ctx.textAlign = "center" ;
+                                                ctx.fillStyle = "white" ;
+                                                ctx.fillText("Waiting for Player!", width/2,height/2);
+                                                return;
+                                        } 
+
+                                        // Offline player
+                                        if( offline )
+                                        {
+                                                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                                                ctx.fillRect(0,0,width,height);
+                                                ctx.font = "50px Arial" ;
+                                                ctx.textAlign = "center" ;
+                                                ctx.fillStyle = "white" ;
+                                                ctx.fillText("Player offline!", width/2,height/2);
+                                                return;
+                                        }    
+
+                                        // Morto player
+                                        if( morto )
+                                        {
+                                                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                                                ctx.fillRect(0,0,width,height);
+                                                ctx.font = "50px Arial" ;
+                                                ctx.textAlign = "center" ;
+                                                ctx.fillStyle = "white" ;
+                                                ctx.fillText("You are dead!", width/2,height/2);
+                                                ctx.font = "40px Arial" ;
+                                                ctx.fillText(point + " Points",width/2,height/2+60);    
+                                                return;
+                                        }  
+
+					ctx.font = "50px Arial" ;
+					ctx.fillStyle = "white" ;
+					ctx.textAlign = "right" ;
+					ctx.fillText(point,990,50);
+
+                                        trasla(0,0,-velz);
+
 				},35);
 		
-				asteroids.push(addAsteroide(20,[0,0,2*maxd]));
+				asteroids.push(addAsteroide(20,[  0,0,maxd]));
+				asteroids.push(addAsteroide(10,[ 60,0,maxd]));
+				asteroids.push(addAsteroide(5, [-60,0,maxd]));
 			});				
 
 
