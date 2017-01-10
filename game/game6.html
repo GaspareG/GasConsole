@@ -24,13 +24,53 @@
 			var width    = 1000 ;
 			var height   = 500 ;
 
-			var pos     = [[250,250],[750,250]];
+			var pos     = [[100,250],[900,250]];
+			var mirino  = [0,180] ;
+
 			var player  = [false,false] ;
 			var offline = [false,false] ;
 			var point   = [0,0] ;
 			
                         var wsServer = null ;
                         var wsRead = false ;
+
+			var spari = [] ;
+			var lastSparo = [0,0] ;
+			function spara(cc)
+			{
+				if( !player[0] || !player[1] ) return ;
+				if( offline[0] || offline[1] ) return ;
+				var now = (new Date()).getTime();
+				if( now-lastSparo[cc] < 300 ) return ;
+				spari.push([[
+					pos[cc][0]+60*Math.cos(mirino[cc]*Math.PI/180),
+					pos[cc][1]+60*Math.sin(mirino[cc]*Math.PI/180)
+					],mirino[cc],cc]);
+				lastSparo[cc] = now ;
+			}
+
+			function move(cc,dx,dy)	
+			{
+				var oldP = [pos[cc][0],pos[cc][1]] ;
+				oldP[0] += dx ;
+				oldP[1] += dy ;
+				// Wall collision
+				if( oldP[0]-34 < 0 ) oldP[0] = 34 ;
+				if( oldP[1]-34 < 0 ) oldP[1] = 34 ;
+				if( oldP[0]+34 > width  ) oldP[0] =  width-34 ;
+				if( oldP[1]+34 > height ) oldP[1] = height-34 ;
+				// Player to Player collision
+/*				var dist = (pos[cc][0]-pos[1-cc][0])*(pos[cc][0]-pos[1-cc][1])-(pos[cc][0]-pos[1-cc][1])*(pos[cc][1]-pos[1-cc][1]);
+				var angle = Math.atan2(pos[cc][1]-pos[1-cc][1],pos[cc][0]-pos[1-cc][0]);
+				console.log(parseInt(180/Math.PI*angle),dist);
+				if( dist < 48*48 )
+				{
+					oldP[0] = pos[1-cc][0] + Math.cos(angle)*60 ;
+					oldP[1] = pos[1-cc][1] + Math.sin(angle)*60 ;
+					console.log(oldP);
+				}	*/
+				pos[cc] = oldP ;
+			}
 
                         function mandaMsg(numero, msg)
                         {
@@ -57,7 +97,7 @@
                                                 if( data.event == "press" &&
                                                     (data.value == "A" || data.value == "B") ) spara();
                                                 else if(data.event == "press" && data.value == "R" )
-                                                        location.href = "game4.html" ;
+                                                        location.href = "game6.html" ;
                                                 else if(data.event == "press" && data.value == "H" )
                                                         location.href = "home.html" ;
 						return ;
@@ -78,6 +118,25 @@
 							offline[i] = true ;
 							continue ;
 						}
+
+						switch( data[i].controller )
+						{
+							case "analog":
+								var left = data[i].analog.left ;
+								var right = data[i].analog.right ;
+								if( left.perc > 0 )
+								{
+
+									move(i,-Math.cos(Math.PI/180*left.deg)*left.perc/15,
+                                                                               -Math.sin(Math.PI/180*left.deg)*left.perc/15);
+								}
+								if( right.perc > 0 )
+								{
+									mirino[i] = 180+right.deg ;
+									spara(i);
+								}
+							break ;
+						}
 	
 					}
 				};
@@ -86,21 +145,97 @@
 				var update = setInterval(function(){
 
 					// Pulisco 
-					ctx.fillStyle = "#000";
+					ctx.fillStyle = "#2196F3";
  					ctx.fillRect(0,0,width,height);
 
-					// Stili 
-					ctx.fillStyle = "white" ;
-					ctx.strokeStyle = "white" ;
+                                        ctx.strokeStyle = "#9E9E9E" ;
+                                        ctx.lineWidth = 16 ;
+                                        ctx.beginPath();
+                                        ctx.moveTo(0,0);
+                                        ctx.lineTo(0,height);
+                                        ctx.lineTo(width,height);
+                                        ctx.lineTo(width,0);
+                                        ctx.lineTo(0,0);
+                                        ctx.stroke();
+
 					ctx.lineWidth = 3 ;
 
+					// Blocchi protettivi
+					ctx.fillStyle = "#9E9E9E" ;
+					ctx.fillRect(200,100,50,200);
+					ctx.fillRect(750, 200,50,200);		
+					ctx.fillRect(400,225,200,50);
+					ctx.fillRect(475,75,50,75);
+					ctx.fillRect(475,350,50,75);
+
+					// interni
+					ctx.fillStyle = "#BDBDBD" ;
+					var bb = 5 ;
+                                        ctx.fillRect(200+bb,100+bb,50-bb*2,200-bb*2);
+                                        ctx.fillRect(750+bb,200+bb,50-bb*2,200-bb*2);
+
+                                        ctx.fillRect(400+bb,225+bb,200-2*bb,50-2*bb);
+                                        ctx.fillRect(475+bb, 75+bb, 50-2*bb,75-2*bb);
+                                        ctx.fillRect(475+bb,350+bb, 50-2*bb,75-2*bb);
+
+                                        // Spari
+                                        for(var i=0; i<spari.length; i++)
+                                        {
+                                                ctx.save();
+                                                ctx.strokeStyle = "#000" ;
+						ctx.beginPath();
+                                                ctx.translate( spari[i][0][0], spari[i][0][1] );
+                                                ctx.rotate(Math.PI/180* (90+spari[i][1]) );
+                                                ctx.moveTo(0,-10);
+                                                ctx.lineTo(0,+10);
+                                                ctx.stroke();
+                                                ctx.restore();
+                                                spari[i][0][0] += Math.cos(spari[i][1]*Math.PI/180) * 10 ;
+                                                spari[i][0][1] += Math.sin(spari[i][1]*Math.PI/180) * 10 ;
+                                        }
 
                                         // Cursore Giocatore
-					var r = 20 ;
-					ctx.fillStyle = "white" ;
-					ctx.fillRect(pos[0][0]-r/2, pos[0][1]-r/2,r,r);
-                                        ctx.fillRect(pos[1][0]-r/2, pos[1][1]-r/2,r,r);
+                                        ctx.strokeStyle = "#EEFF41" ;
+					ctx.fillStyle = "#EEFF41" ;
 
+					var r = 25 ;
+
+					ctx.beginPath();
+					ctx.arc(pos[0][0],pos[0][1], r, 0, 2*Math.PI);
+					ctx.fill();
+
+					ctx.beginPath();
+					ctx.moveTo(pos[0][0], pos[0][1]);
+					ctx.lineTo(	pos[0][0] + 2*r*Math.cos(Math.PI/180*mirino[0]),
+							pos[0][1] + 2*r*Math.sin(Math.PI/180*mirino[0]) );
+					ctx.stroke();
+
+                                        ctx.beginPath();
+                                        ctx.arc(pos[1][0],pos[1][1], r, 0, 2*Math.PI);
+                                        ctx.fill();
+
+                                        ctx.beginPath();
+                                        ctx.moveTo(pos[1][0], pos[1][1]);
+                                        ctx.lineTo(     pos[1][0] + 2*r*Math.cos(Math.PI/180*mirino[1]),
+                                                        pos[1][1] + 2*r*Math.sin(Math.PI/180*mirino[1]) );
+                                        ctx.stroke();
+
+					r = 20 ;
+					ctx.fillStyle = "#D50000" ;
+					ctx.strokeStyle = "#D50000" ;	
+					ctx.beginPath();
+					ctx.arc(pos[0][0],pos[0][1], r, 0, 2*Math.PI);
+					ctx.fill();
+
+                                        ctx.beginPath();
+                                        ctx.arc(pos[1][0],pos[1][1], r, 0, 2*Math.PI);
+                                        ctx.fill();
+
+					ctx.fillStyle = "#000" ;
+					ctx.font = " 32px Arial" ;
+					ctx.textAlign = "center" ;
+					ctx.fillText("A", pos[0][0], pos[0][1]+10);
+					ctx.fillText("B", pos[1][0], pos[1][1]+10);
 
                                         // Punti
                                         ctx.font = "50px Arial" ;
@@ -155,9 +290,55 @@
                                         } 
 
 
-					// Game!!				
+					// Game
+
+                                        ctx.strokeStyle = "#9E9E9E" ;
+                                        ctx.lineWidth = 16 ;
+                                        ctx.beginPath();
+                                        ctx.moveTo(0,0);
+                                        ctx.lineTo(0,height);
+                                        ctx.lineTo(width,height);
+                                        ctx.lineTo(width,0);
+                                        ctx.lineTo(0,0);
+                                        ctx.stroke();
+
+                                        ctx.lineWidth = 3 ;
 
 
+					// Rimuovo gli spari fuori
+					var nspari = [] ;
+					var block = [
+                                       		[200,100, 50,200],
+                                        	[750,200, 50,200],
+                                        	[400,225,200, 50],
+                                        	[475, 75, 50, 75],
+                                        	[475,350, 50, 75]
+					];
+					for(var i=0; i<spari.length; i++)
+					{
+						var pp = spari[i][0] ;
+						if( pp[0] < 0 || pp[0] > width ) continue ;
+						if( pp[1] < 0 || pp[1] > width ) continue ;
+						var hit = false ;
+						for( var j = 0 ; j < block.length ; j++ )
+						{
+							var dx = pp[0]- block[j][0] //- pp[0];
+							var dy = pp[1]- block[j][1] //- pp[1];
+							if( dx > 0 && dy > 0 ) 
+							if( dx < block[j][2] && dy < block[j][3] )
+							hit = true ;
+						}
+						if( hit ) continue ;
+						var paltro = pos[1-spari[i][2]] ;
+						var dist = (paltro[0]-pp[0])*(paltro[0]-pp[0])+(paltro[1]-pp[1])*(paltro[1]-pp[1]);
+						if( dist < 25*25 )
+						{
+							point[1-spari[i][2]] += 10 ;
+							continue ;
+						}
+						nspari.push(spari[i]);
+					}					
+					spari = nspari ;
 				},35);
 		
 			});				
