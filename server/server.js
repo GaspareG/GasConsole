@@ -67,9 +67,20 @@ wss.on('connection', function connection(ws) {
 			if(data=="CLIENT")
 			{
 				type[id] = 1 ;
-				clientId[id] = clientWs.length ;
-				inputData.push({ offline: false });
-				clientWs.push(wsc);
+				var idScelto = -1 ;
+				for(var i=0; i<inputData.length; i++)
+				{
+					if(inputData[i] != undefined && inputData[i].offline )
+					{
+						idScelto = i ;
+						break ;
+					}
+				}
+				if(idScelto == -1) idScelto = inputData.length ;
+				clientId[id] = idScelto ;
+				inputData[idScelto] = { offline: false };
+				clientWs[idScelto] = wsc;
+
 				wsc.send("Player " + (clientId[id]+1));
 				console.log("NEW CLIENT["+clientId[id]+"]");
 			}	
@@ -80,8 +91,8 @@ wss.on('connection', function connection(ws) {
 				sClose[serverId[id]] = false ;
 				serverWs.push(wsc);
 				console.log("NEW SERVER["+serverId[id]+"]");
-				inputData = [] ; // TODO Guardare se funziona!
-				clientWs  = [] ;
+				// inputData = [] ;
+				// clientWs  = [] ;
 			}
 		}
 		else
@@ -92,7 +103,7 @@ wss.on('connection', function connection(ws) {
 				if( dt.event )
 				{
 					dt.client = clientId[id] ;
-					console.log(dt);
+					//console.log(dt);
 					sendAllServer(dt);
 					return ;
 				}

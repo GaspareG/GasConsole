@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Game4</title>
+		<title>Game6</title>
 		<style>
 			body {
 				margin: 0px ;
@@ -60,15 +60,56 @@
 				if( oldP[0]+34 > width  ) oldP[0] =  width-34 ;
 				if( oldP[1]+34 > height ) oldP[1] = height-34 ;
 				// Player to Player collision
-/*				var dist = (pos[cc][0]-pos[1-cc][0])*(pos[cc][0]-pos[1-cc][1])-(pos[cc][0]-pos[1-cc][1])*(pos[cc][1]-pos[1-cc][1]);
-				var angle = Math.atan2(pos[cc][1]-pos[1-cc][1],pos[cc][0]-pos[1-cc][0]);
-				console.log(parseInt(180/Math.PI*angle),dist);
-				if( dist < 48*48 )
-				{
-					oldP[0] = pos[1-cc][0] + Math.cos(angle)*60 ;
-					oldP[1] = pos[1-cc][1] + Math.sin(angle)*60 ;
-					console.log(oldP);
-				}	*/
+
+				var block = [
+                                         [200,100, 50,200],
+                                         [750,200, 50,200],
+                                         [400,225,200, 50],
+                                         [475, 75, 50, 75],
+                                         [475,350, 50, 75]
+                                ];
+
+                                var hit = false ;
+                                for( var j = 0 ; j < block.length ; j++ )
+                                {
+                                	var dx = oldP[0]+25 - block[j][0] //- pp[0];
+                                	var dy = oldP[1] - block[j][1] //- pp[1];
+                                	if( dx > 0 && dy > 0 )
+                                	if( dx < block[j][2] && dy < block[j][3] )
+                                	hit = true ;
+                                }
+				if( hit ) return ;			
+
+                                for( var j = 0 ; j < block.length ; j++ )
+                                {
+                                        var dx = oldP[0]-25 - block[j][0] //- pp[0];
+                                        var dy = oldP[1] - block[j][1] //- pp[1];
+                                        if( dx > 0 && dy > 0 )
+                                        if( dx < block[j][2] && dy < block[j][3] )
+                                        hit = true ;
+                                }
+                                if( hit ) return ;
+
+                                for( var j = 0 ; j < block.length ; j++ )
+                                {
+                                        var dx = oldP[0] - block[j][0] //- pp[0];
+                                        var dy = oldP[1] - block[j][1]-25 //- pp[1];
+                                        if( dx > 0 && dy > 0 )
+                                        if( dx < block[j][2] && dy < block[j][3] )
+                                        hit = true ;
+                                }
+                                if( hit ) return ;
+
+                                for( var j = 0 ; j < block.length ; j++ )
+                                {
+                                        var dx = oldP[0] - block[j][0] //- pp[0];
+                                        var dy = oldP[1] - block[j][1]+25 //- pp[1];
+                                        if( dx > 0 && dy > 0 )
+                                        if( dx < block[j][2] && dy < block[j][3] )
+                                        hit = true ;
+                                }
+                                if( hit ) return ;
+
 				pos[cc] = oldP ;
 			}
 
@@ -95,7 +136,7 @@
 					if( !Array.isArray(data) )
                                         {
                                                 if( data.event == "press" &&
-                                                    (data.value == "A" || data.value == "B") ) spara();
+                                                    (data.value == "A" || data.value == "B") ) spara(data.client);
                                                 else if(data.event == "press" && data.value == "R" )
                                                         location.href = "game6.html" ;
                                                 else if(data.event == "press" && data.value == "H" )
@@ -135,6 +176,31 @@
 									mirino[i] = 180+right.deg ;
 									spara(i);
 								}
+							break ;
+							case "classic":
+								var button = data[i].classic.button ;
+								if( button.A || button.B ) spara(i);
+								var dir = data[i].classic.direction ;
+								if( dir.left ) move(i,-7,0);
+								else if( dir.right ) move(i,+7,0);
+								
+								if( dir.top ) move(i,0,-7);
+								else if( dir.down ) move(i,0,+7);
+
+								if( dir.left ) mirino[i] = 180 ;
+								else if( dir.right ) mirino[i] = 0 ;
+								else if( dir.top   ) mirino[i] = 270 ;
+								else if( dir.down  ) mirino[i] = 90 ;
+							break ;
+							case "wheel":
+								var dir  = data[i].wheel.direction ;
+								var button = data[i].wheel.button ;
+								if( button.A || button.B ) spara(i);
+
+								mirino[i] += dir.deg/5 ;
+                                                                move(i,Math.cos(Math.PI/180*mirino[i])*dir.vel/15,
+                                                                       Math.sin(Math.PI/180*mirino[i])*dir.vel/15);
+  
 							break ;
 						}
 	
@@ -333,6 +399,8 @@
 						var dist = (paltro[0]-pp[0])*(paltro[0]-pp[0])+(paltro[1]-pp[1])*(paltro[1]-pp[1]);
 						if( dist < 25*25 )
 						{
+							mandaMsg(spari[i][2], "Great! You hit It! +10 points!");
+							mandaMsg(1-spari[i][2],   "Oh no! Opponent Hit You!");
 							point[1-spari[i][2]] += 10 ;
 							continue ;
 						}
